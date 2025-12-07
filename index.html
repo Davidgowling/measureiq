@@ -3,28 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flooring Calculator</title>
+    <title>MeasureIQ</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <h1>Flooring Calculator</h1>
+<h1>MeasureIQ</h1>
 
-    <div class="calculator">
-        <label>Room Length (m)</label>
-        <input type="number" id="length">
+<!-- CUSTOMER INFORMATION -->
+<div class="project">
+    <h2>Customer Details</h2>
 
-        <label>Room Width (m)</label>
-        <input type="number" id="width">
+    <label>Customer Name</label>
+    <input type="text" id="customerName" placeholder="Enter customer name">
 
-        <label>Wastage (%)</label>
-        <input type="number" id="wastage" value="10">
+    <label>Job Reference (optional)</label>
+    <input type="text" id="jobRef" placeholder="Enter job reference">
 
-        <button onclick="calculate()">Calculate</button>
+    <button id="saveCustomerBtn">Save Customer</button>
 
-        <h2 id="result"></h2>
+    <h2>Rooms</h2>
+
+    <button id="addRoomBtn">+ Add Room</button>
+
+    <ul id="roomList"></ul>
+</div>
+
+<hr>
+
+<!-- ROOM CALCULATOR -->
+<div class="calculator" id="roomCalculator" style="display:none;">
+
+    <div class="room-header">
+        <h2 id="roomTitle">Room</h2>
+        <button id="editRoomBtn">Edit</button>
+        <button id="deleteRoomBtn">Delete</button>
     </div>
 
+    <!-- PRODUCT SELECTION -->
+    <label>Select Product</label>
+    <select id="productSelect" onchange="updateProductDetails()">
+        <option value="">-- Choose a product --</option>
+    </select>
+
+    <!-- ROOM DIMENSIONS -->
+    <label>Room Length (m)</label>
+    <input type="number" id="length" step="0.01">
+
+    <label>Room Width (m)</label>
+    <input type="number" id="widthInput" step="0.01">
+
+    <!-- WIDTH DROPDOWN FOR SHEET PRODUCTS -->
+    <select id="widthDropdown" style="display:none;"></select>
+
+    <!-- WASTAGE -->
+    <label>Wastage (%)</label>
+    <input type="number" id="wastage" value="10">
+
+    <!-- AUTO-FILLED PRODUCT FIELDS -->
+    <label>Pack Size (m² per pack)</label>
+    <input type="number" id="packSize" readonly>
+
+    <label>Trade Price (£)</label>
+    <input type="number" id="price" readonly>
+
+    <!-- CALCULATE -->
+    <button id="calculateBtn">Calculate Room</button>
+
+    <!-- OUTPUT -->
+    <div id="result"></div>
+</div>
+
+<hr>
+
+<!-- PROJECT SUMMARY -->
+<div id="summary" style="display:none;">
+    <h2>Project Summary</h2>
+    <div id="summaryContent"></div>
+
+    <button id="printBtn">Print / PDF Export</button>
+</div>
+
 <script src="script.js"></script>
+
 </body>
 </html>

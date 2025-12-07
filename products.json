@@ -1,0 +1,34 @@
+[
+  {
+    "id": 1,
+    "brand": "Loom & Weave",
+    "rangeName": "Halo",
+    "type": "pack",
+    "packSize": 2.20,
+    "tradePrice": 29.99
+  },
+  {
+    "id": 2,
+    "brand": "Brampton Chase",
+    "rangeName": "Signature",
+    "type": "pack",
+    "packSize": 2.50,
+    "tradePrice": 41.00
+  },
+  {
+    "id": 3,
+    "brand": "Generic Carpet",
+    "rangeName": "Twist Pile",
+    "type": "sheet",
+    "availableWidths": [2, 3, 4, 5],
+    "tradePrice": 12.99
+  },
+  {
+    "id": 4,
+    "brand": "Generic Vinyl",
+    "rangeName": "Stone Effect",
+    "type": "sheet",
+    "availableWidths": [2, 3, 4],
+    "tradePrice": 15.50
+  }
+]
