@@ -4,7 +4,7 @@
     "brand": "Loom & Weave",
     "rangeName": "Halo",
     "type": "pack",
-    "packSize": 2.20,
+    "packSize": 2.2,
     "tradePrice": 29.99
   },
   {
@@ -12,8 +12,8 @@
     "brand": "Brampton Chase",
     "rangeName": "Signature",
     "type": "pack",
-    "packSize": 2.50,
-    "tradePrice": 41.00
+    "packSize": 2.5,
+    "tradePrice": 41.0
   },
   {
     "id": 3,
@@ -29,6 +29,6 @@
     "rangeName": "Stone Effect",
     "type": "sheet",
     "availableWidths": [2, 3, 4],
-    "tradePrice": 15.50
+    "tradePrice": 15.5
   }
 ]

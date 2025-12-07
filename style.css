@@ -1,51 +1,357 @@
-body {
-  font-family: Arial, sans-serif;
-  background: #f4f4f4;
-  padding: 40px;
+/* ---------- BASE LAYOUT ---------- */
+
+* {
+    box-sizing: border-box;
 }
 
-.calculator {
-  background: white;
-  padding: 25px;
-  max-width: 420px;
-  margin: auto;
-  border-radius: 10px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+body {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    margin: 0;
+    padding: 20px;
+    background: #f5f7fb;
+    color: #1c2537;
 }
+
+h1 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+h2, h3 {
+    margin-top: 0;
+}
+
+/* Two-column layout on desktop */
+.layout {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+/* Stack on mobile */
+@media (max-width: 800px) {
+    .layout {
+        flex-direction: column;
+    }
+}
+
+/* ---------- PANELS ---------- */
+
+.project,
+.calculator,
+.summary,
+.panel {
+    background: #ffffff;
+    padding: 16px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.project {
+    flex: 0 0 280px;
+}
+
+.right-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* ---------- FORMS ---------- */
 
 label {
-  display: block;
-  margin-top: 12px;
-  font-weight: bold;
+    display: block;
+    margin-top: 10px;
+    font-weight: 600;
+    font-size: 0.9rem;
 }
 
-input, select {
-  width: 100%;
-  padding: 10px;
-  margin-top: 6px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
+input,
+select {
+    width: 100%;
+    padding: 8px 10px;
+    margin-top: 4px;
+    border-radius: 6px;
+    border: 1px solid #ccd2e0;
+    font-size: 0.95rem;
 }
 
-button {
-  margin-top: 20px;
-  padding: 12px;
-  width: 100%;
-  background: #1c2537;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  font-size: 16px;
-  cursor: pointer;
+/* ---------- BUTTONS ---------- */
+
+.btn {
+    display: inline-block;
+    padding: 8px 14px;
+    margin-top: 10px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-align: center;
 }
 
-button:hover {
-  background: #32405a;
+.btn.primary {
+    background: #001f3f;          /* Navy */
+    color: #ffffff;
 }
 
-#result {
-  margin-top: 25px;
-  background: #fafafa;
-  padding: 15px;
-  border-radius: 6px;
+.btn.primary:hover {
+    background: #022954;
+}
+
+.btn.secondary {
+    background: #e4e8f3;
+    color: #1c2537;
+}
+
+.btn.secondary:hover {
+    background: #d3d9eb;
+}
+
+.btn.danger {
+    background: #d9534f;
+    color: #ffffff;
+}
+
+.btn.danger:hover {
+    background: #c0392b;
+}
+
+.btn.full-width {
+    width: 100%;
+}
+
+.btn.small {
+    padding: 4px 8px;
+    font-size: 0.8rem;
+}
+
+/* ---------- CUSTOMER + ROOMS ---------- */
+
+.customer-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.saved-list {
+    list-style: none;
+    padding: 0;
+    margin-top: 8px;
+}
+
+.saved-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 8px;
+    background: #f5f7fb;
+    border-radius: 6px;
+    margin-bottom: 6px;
+    cursor: pointer;
+    border: 1px solid #dde2f0;
+    font-size: 0.9rem;
+}
+
+.saved-list li:hover {
+    background: #e7ecfa;
+}
+
+.saved-list .delete-btn {
+    color: #d9534f;
+    font-weight: bold;
+    margin-left: 10px;
+    cursor: pointer;
+}
+
+.room-list {
+    list-style: none;
+    padding: 0;
+    margin-top: 10px;
+}
+
+.room-list li {
+    margin-bottom: 6px;
+}
+
+.room-list button {
+    width: 100%;
+    text-align: left;
+}
+
+/* ---------- TABS ---------- */
+
+.tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 10px;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid #ccd2e0;
+    background: #f5f7fb;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.tab-btn.active {
+    background: #001f3f;
+    color: #ffffff;
+    border-color: #001f3f;
+}
+
+/* ---------- ROOM HEADER ---------- */
+
+.room-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.room-actions .btn {
+    margin-left: 6px;
+}
+
+/* ---------- ROOM ACCESSORIES (DYNAMIC) ---------- */
+
+.accessories-section {
+    margin-top: 14px;
+    padding-top: 10px;
+    border-top: 1px solid #dde2f0;
+}
+
+.accessories-section h3 {
+    margin: 0 0 6px;
+    font-size: 0.95rem;
+}
+
+.accessory-room-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 6px;
+    padding: 6px 0;
+    border-bottom: 1px dashed #eef1f8;
+}
+
+.accessory-room-row:last-child {
+    border-bottom: none;
+}
+
+.checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+}
+
+.checkbox input[type="checkbox"] {
+    width: auto;
+}
+
+.accessory-qty {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+}
+
+.accessory-qty input[type="number"] {
+    width: 90px;
+}
+
+/* ---------- ACCESSORIES PRICING PANEL ---------- */
+
+.accessories-panel {
+    padding: 16px;
+}
+
+.accessory-row {
+    margin-top: 10px;
+}
+
+.accessory-row.two-col {
+    display: flex;
+    gap: 10px;
+}
+
+.accessory-row.two-col > div {
+    flex: 1;
+}
+
+.accessories-table {
+    margin-top: 10px;
+}
+
+.accessories-table input,
+.accessories-table select {
+    width: 100%;
+}
+
+/* ---------- RESULT + SUMMARY ---------- */
+
+.result {
+    margin-top: 12px;
+    font-size: 0.9rem;
+}
+
+.cost-block {
+    margin-top: 10px;
+    padding: 12px;
+    background: #eef2fa;
+    border-radius: 8px;
+    border: 1px solid #d3d9eb;
+    line-height: 1.4;
+}
+
+.summary {
+    margin-top: 10px;
+}
+
+.summary-content {
+    margin-top: 8px;
+}
+
+.summary-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 10px;
+    font-size: 0.9rem;
+}
+
+.summary-table th,
+.summary-table td {
+    border: 1px solid #dde2f0;
+    padding: 6px 8px;
+}
+
+.summary-table th {
+    background: #f5f7fb;
+    text-align: left;
+}
+
+.summary-total {
+    text-align: right;
+    font-weight: 700;
+    margin-top: 4px;
+}
+
+/* ---------- MISC ---------- */
+
+.muted {
+    color: #7a8195;
+    font-size: 0.9rem;
+}
+
+.small-note {
+    margin-left: 2px;
+    font-size: 0.85rem;
+    color: #2e7d32;
+    min-height: 1em;
 }

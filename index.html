@@ -10,78 +10,151 @@
 
 <h1>MeasureIQ</h1>
 
-<!-- CUSTOMER INFORMATION -->
-<div class="project">
-    <h2>Customer Details</h2>
+<div class="layout">
 
-    <label>Customer Name</label>
-    <input type="text" id="customerName" placeholder="Enter customer name">
+    <!-- LEFT COLUMN: CUSTOMER + ROOMS -->
+    <div class="project">
+        <h2>Customer Details</h2>
 
-    <label>Job Reference (optional)</label>
-    <input type="text" id="jobRef" placeholder="Enter job reference">
+        <label for="customerName">Customer Name</label>
+        <input type="text" id="customerName" placeholder="Enter customer name">
 
-    <button id="saveCustomerBtn">Save Customer</button>
+        <label for="jobRef">Job Reference (optional)</label>
+        <input type="text" id="jobRef" placeholder="Enter job reference">
 
-    <h2>Rooms</h2>
+        <div class="customer-actions">
+            <button id="saveCustomerBtn" class="btn primary">Save Customer</button>
+            <button id="newCustomerBtn" class="btn secondary">New Customer</button>
+        </div>
 
-    <button id="addRoomBtn">+ Add Room</button>
+        <h3>Saved Customers</h3>
+        <ul id="savedCustomersList" class="saved-list"></ul>
 
-    <ul id="roomList"></ul>
-</div>
+        <h2>Rooms</h2>
+        <button id="addRoomBtn" class="btn secondary full-width">+ Add Room</button>
 
-<hr>
-
-<!-- ROOM CALCULATOR -->
-<div class="calculator" id="roomCalculator" style="display:none;">
-
-    <div class="room-header">
-        <h2 id="roomTitle">Room</h2>
-        <button id="editRoomBtn">Edit</button>
-        <button id="deleteRoomBtn">Delete</button>
+        <ul id="roomList" class="room-list"></ul>
     </div>
 
-    <!-- PRODUCT SELECTION -->
-    <label>Select Product</label>
-    <select id="productSelect" onchange="updateProductDetails()">
-        <option value="">-- Choose a product --</option>
-    </select>
+    <!-- RIGHT COLUMN: TABS + PANELS -->
+    <div class="right-column">
 
-    <!-- ROOM DIMENSIONS -->
-    <label>Room Length (m)</label>
-    <input type="number" id="length" step="0.01">
+        <!-- TABS -->
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="calculatorSection">Room Calculator</button>
+            <button class="tab-btn" data-tab="accessoriesSection">Accessories Pricing</button>
+            <button class="tab-btn" data-tab="summarySection">Project Summary</button>
+        </div>
 
-    <label>Room Width (m)</label>
-    <input type="number" id="widthInput" step="0.01">
+        <!-- TAB: ROOM CALCULATOR -->
+        <div id="calculatorSection" class="tab-panel">
+            <div class="calculator" id="roomCalculator">
 
-    <!-- WIDTH DROPDOWN FOR SHEET PRODUCTS -->
-    <select id="widthDropdown" style="display:none;"></select>
+                <div class="room-header">
+                    <h2 id="roomTitle">No room selected</h2>
+                    <div class="room-actions">
+                        <button id="editRoomBtn" class="btn secondary">Rename</button>
+                        <button id="deleteRoomBtn" class="btn danger">Delete</button>
+                    </div>
+                </div>
 
-    <!-- WASTAGE -->
-    <label>Wastage (%)</label>
-    <input type="number" id="wastage" value="10">
+                <!-- PRODUCT SELECTION -->
+                <label for="productSelect">Select Product</label>
+                <select id="productSelect">
+                    <option value="">-- Choose a product --</option>
+                </select>
 
-    <!-- AUTO-FILLED PRODUCT FIELDS -->
-    <label>Pack Size (m² per pack)</label>
-    <input type="number" id="packSize" readonly>
+                <!-- ROOM DIMENSIONS -->
+                <label for="length">Room Length (m)</label>
+                <input type="number" id="length" step="0.01" min="0">
 
-    <label>Trade Price (£)</label>
-    <input type="number" id="price" readonly>
+                <label for="widthInput">Room Width (m)</label>
+                <input type="number" id="widthInput" step="0.01" min="0">
 
-    <!-- CALCULATE -->
-    <button id="calculateBtn">Calculate Room</button>
+                <!-- SHEET ROLL WIDTH DROPDOWN (OPTIONAL) -->
+                <label for="widthDropdown" id="widthDropdownLabel" style="display:none;">Roll Width (m)</label>
+                <select id="widthDropdown" style="display:none;"></select>
 
-    <!-- OUTPUT -->
-    <div id="result"></div>
-</div>
+                <!-- WASTAGE -->
+                <label for="wastage">Wastage (%)</label>
+                <input type="number" id="wastage" value="10" min="0" max="100">
 
-<hr>
+                <!-- AUTO-FILLED PRODUCT FIELDS -->
+                <label for="packSize">Pack Size (m² per pack)</label>
+                <input type="number" id="packSize" readonly>
 
-<!-- PROJECT SUMMARY -->
-<div id="summary" style="display:none;">
-    <h2>Project Summary</h2>
-    <div id="summaryContent"></div>
+                <label for="price">Trade Price (£)</label>
+                <input type="number" id="price" readonly>
 
-    <button id="printBtn">Print / PDF Export</button>
+                <!-- ACCESSORIES SECTION (DYNAMIC) -->
+                <div class="accessories-section">
+                    <h3>Accessories</h3>
+                    <div id="roomAccessories"></div>
+                </div>
+
+                <!-- CALCULATE -->
+                <button id="calculateBtn" class="btn primary full-width">Calculate Room</button>
+                <div id="roomSavedMsg" class="small-note"></div>
+
+                <!-- OUTPUT -->
+                <div id="result" class="result"></div>
+            </div>
+        </div>
+
+        <!-- TAB: ACCESSORIES PRICING -->
+        <div id="accessoriesSection" class="tab-panel" style="display:none;">
+            <div class="panel accessories-panel">
+                <h2>Accessories Pricing</h2>
+                <p class="muted">
+                    Add and manage accessories here (e.g. underlay, gripper, screed). These will appear in the room
+                    calculator with checkboxes and quantity boxes. Prices are stored locally in your browser.
+                </p>
+
+                <div id="accessoriesPricingList"></div>
+
+                <div class="add-accessory">
+                    <h3>Add Accessory</h3>
+
+                    <div class="accessory-row">
+                        <label for="newAccName">Name</label>
+                        <input type="text" id="newAccName" placeholder="e.g. Screed, Plyboard, Uplift & Disposal">
+                    </div>
+
+                    <div class="accessory-row two-col">
+                        <div>
+                            <label for="newAccUnit">Unit</label>
+                            <select id="newAccUnit">
+                                <option value="sqm">per m²</option>
+                                <option value="lm">per metre</option>
+                                <option value="item">per item</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="newAccPrice">Price (£)</label>
+                            <input type="number" id="newAccPrice" step="0.01" min="0">
+                        </div>
+                    </div>
+
+                    <button id="addAccessoryBtn" class="btn secondary">Add Accessory</button>
+                </div>
+
+                <button id="saveAccessoriesBtn" class="btn primary">Save All Accessories</button>
+                <span id="accessoriesSavedMsg" class="small-note"></span>
+            </div>
+        </div>
+
+        <!-- TAB: PROJECT SUMMARY -->
+        <div id="summarySection" class="tab-panel" style="display:none;">
+            <div id="summary" class="summary">
+                <h2>Project Summary</h2>
+                <div id="summaryContent" class="summary-content">
+                    <p class="muted">No rooms calculated yet.</p>
+                </div>
+                <button id="printBtn" class="btn secondary">Print / PDF Export</button>
+            </div>
+        </div>
+
+    </div>
 </div>
 
 <script src="script.js"></script>
