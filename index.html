@@ -49,55 +49,76 @@
         <!-- TAB: ROOM CALCULATOR -->
         <div id="calculatorSection" class="tab-panel">
             <div class="calculator" id="roomCalculator">
+                <div id="noRoomMessage" class="muted">
+                    Add a room on the left to begin.
+                </div>
 
-                <div class="room-header">
-                    <h2 id="roomTitle">No room selected</h2>
-                    <div class="room-actions">
-                        <button id="editRoomBtn" class="btn secondary">Rename</button>
-                        <button id="deleteRoomBtn" class="btn danger">Delete</button>
+                <div id="roomForm" style="display:none;">
+
+                    <div class="room-header">
+                        <h2 id="roomTitle">No room selected</h2>
+                        <div class="room-actions">
+                            <button id="editRoomBtn" class="btn secondary">Rename</button>
+                            <button id="deleteRoomBtn" class="btn danger">Delete</button>
+                        </div>
                     </div>
+
+                    <!-- PRODUCT TYPE + RANGE -->
+                    <label for="productTypeSelect">Product Type</label>
+                    <select id="productTypeSelect">
+                        <option value="">-- Choose product type --</option>
+                        <option value="carpet">Carpet / Sheet Vinyl</option>
+                        <option value="hard">Hard Flooring / LVT</option>
+                        <option value="woodlam">Wood / Laminate</option>
+                    </select>
+
+                    <div class="product-range-row">
+                        <div class="product-range-info">
+                            <label>Selected Range</label>
+                            <div id="selectedRangeDisplay" class="range-display">
+                                None selected
+                            </div>
+                        </div>
+                        <div class="product-range-action">
+                            <button id="selectRangeBtn" class="btn secondary full-width">Select Range</button>
+                        </div>
+                    </div>
+
+                    <!-- ROOM DIMENSIONS -->
+                    <label for="length">Room Length (m)</label>
+                    <input type="number" id="length" step="0.01" min="0">
+
+                    <label for="widthInput" id="widthLabel">Room Width (m)</label>
+                    <input type="number" id="widthInput" step="0.01" min="0">
+
+                    <!-- SHEET ROLL WIDTH DROPDOWN (OPTIONAL) -->
+                    <label for="widthDropdown" id="widthDropdownLabel" style="display:none;">Roll Width (m)</label>
+                    <select id="widthDropdown" style="display:none;"></select>
+
+                    <!-- WASTAGE -->
+                    <label for="wastage">Wastage (%)</label>
+                    <input type="number" id="wastage" value="10" min="0" max="100">
+
+                    <!-- AUTO-FILLED PRODUCT FIELDS -->
+                    <label for="packSize">Pack Size (m² per pack)</label>
+                    <input type="number" id="packSize" readonly>
+
+                    <label for="price">Trade Price (£ ex VAT)</label>
+                    <input type="number" id="price" readonly>
+
+                    <!-- ACCESSORIES SECTION (DYNAMIC) -->
+                    <div class="accessories-section">
+                        <h3>Accessories</h3>
+                        <div id="roomAccessories"></div>
+                    </div>
+
+                    <!-- CALCULATE -->
+                    <button id="calculateBtn" class="btn primary full-width">Calculate &amp; Save</button>
+                    <div id="roomSavedMsg" class="small-note"></div>
+
+                    <!-- OUTPUT -->
+                    <div id="result" class="result"></div>
                 </div>
-
-                <!-- PRODUCT SELECTION -->
-                <label for="productSelect">Select Product</label>
-                <select id="productSelect">
-                    <option value="">-- Choose a product --</option>
-                </select>
-
-                <!-- ROOM DIMENSIONS -->
-                <label for="length">Room Length (m)</label>
-                <input type="number" id="length" step="0.01" min="0">
-
-                <label for="widthInput">Room Width (m)</label>
-                <input type="number" id="widthInput" step="0.01" min="0">
-
-                <!-- SHEET ROLL WIDTH DROPDOWN (OPTIONAL) -->
-                <label for="widthDropdown" id="widthDropdownLabel" style="display:none;">Roll Width (m)</label>
-                <select id="widthDropdown" style="display:none;"></select>
-
-                <!-- WASTAGE -->
-                <label for="wastage">Wastage (%)</label>
-                <input type="number" id="wastage" value="10" min="0" max="100">
-
-                <!-- AUTO-FILLED PRODUCT FIELDS -->
-                <label for="packSize">Pack Size (m² per pack)</label>
-                <input type="number" id="packSize" readonly>
-
-                <label for="price">Trade Price (£)</label>
-                <input type="number" id="price" readonly>
-
-                <!-- ACCESSORIES SECTION (DYNAMIC) -->
-                <div class="accessories-section">
-                    <h3>Accessories</h3>
-                    <div id="roomAccessories"></div>
-                </div>
-
-                <!-- CALCULATE -->
-                <button id="calculateBtn" class="btn primary full-width">Calculate Room</button>
-                <div id="roomSavedMsg" class="small-note"></div>
-
-                <!-- OUTPUT -->
-                <div id="result" class="result"></div>
             </div>
         </div>
 
@@ -107,7 +128,7 @@
                 <h2>Accessories Pricing</h2>
                 <p class="muted">
                     Add and manage accessories here (e.g. underlay, gripper, screed). These will appear in the room
-                    calculator with checkboxes and quantity boxes. Prices are stored locally in your browser.
+                    calculator with checkboxes and quantity boxes. Prices are stored locally in your browser and are ex VAT.
                 </p>
 
                 <div id="accessoriesPricingList"></div>
@@ -130,7 +151,7 @@
                             </select>
                         </div>
                         <div>
-                            <label for="newAccPrice">Price (£)</label>
+                            <label for="newAccPrice">Price (£ ex VAT)</label>
                             <input type="number" id="newAccPrice" step="0.01" min="0">
                         </div>
                     </div>
@@ -154,6 +175,20 @@
             </div>
         </div>
 
+    </div>
+</div>
+
+<!-- RANGE SELECT MODAL -->
+<div id="rangeModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Select Product Range</h3>
+            <button id="closeRangeModalBtn" class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p class="muted" id="rangeModalInfo">Choose a product range for the selected product type.</p>
+            <div id="rangeList"></div>
+        </div>
     </div>
 </div>
 

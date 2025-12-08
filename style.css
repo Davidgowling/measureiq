@@ -218,6 +218,24 @@ select {
     margin-left: 6px;
 }
 
+/* ---------- PRODUCT RANGE ROW ---------- */
+
+.product-range-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.range-display {
+    margin-top: 4px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid #ccd2e0;
+    background: #f5f7fb;
+    font-size: 0.9rem;
+}
+
 /* ---------- ROOM ACCESSORIES (DYNAMIC) ---------- */
 
 .accessories-section {
@@ -354,4 +372,65 @@ select {
     font-size: 0.85rem;
     color: #2e7d32;
     min-height: 1em;
+}
+
+/* ---------- MODAL ---------- */
+
+.modal {
+    display: none; /* shown via JS */
+    position: fixed;
+    z-index: 999;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background: #ffffff;
+    width: 95%;
+    max-width: 520px;
+    border-radius: 10px;
+    padding: 12px 16px 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-close {
+    background: transparent;
+    border: none;
+    font-size: 1.4rem;
+    cursor: pointer;
+}
+
+.modal-body {
+    margin-top: 8px;
+}
+
+#rangeList {
+    margin-top: 8px;
+    max-height: 320px;
+    overflow-y: auto;
+}
+
+/* Range buttons in modal */
+.range-btn {
+    width: 100%;
+    text-align: left;
+    padding: 8px 10px;
+    margin-bottom: 6px;
+    border-radius: 6px;
+    border: 1px solid #dde2f0;
+    background: #f5f7fb;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.range-btn:hover {
+    background: #e4e8f3;
 }

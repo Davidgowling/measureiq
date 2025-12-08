@@ -19,7 +19,6 @@ document.addEventListener("DOMContentLoaded", () => {
         .then(res => res.json())
         .then(data => {
             products = data;
-            populateProductSelect();
         })
         .catch(err => console.error("Error loading products.json", err));
 
@@ -33,11 +32,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.getElementById("calculateBtn").addEventListener("click", () => calculateRoom(false));
 
-    document.getElementById("productSelect").addEventListener("change", () => {
-        updateProductDetails();
+    document.getElementById("productTypeSelect").addEventListener("change", () => {
+        clearSelectedRangeForActiveRoom();
+        applyProductToUI(null);
         calculateRoom(true);
     });
 
+    // Room dimension changes -> live recalc
     ["length", "widthInput", "wastage"].forEach(id => {
         document.getElementById(id).addEventListener("input", () => {
             calculateRoom(true);
@@ -52,6 +53,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.getElementById("saveAccessoriesBtn").addEventListener("click", saveAccessoryDefinitions);
     document.getElementById("addAccessoryBtn").addEventListener("click", addAccessoryDefinition);
+
+    document.getElementById("selectRangeBtn").addEventListener("click", openRangeModal);
+    document.getElementById("closeRangeModalBtn").addEventListener("click", closeRangeModal);
+    document.getElementById("rangeModal").addEventListener("click", (e) => {
+        if (e.target.id === "rangeModal") {
+            closeRangeModal();
+        }
+    });
 
     setupTabs();
     loadAccessoryDefinitions();
@@ -84,72 +93,158 @@ function setupTabs() {
 }
 
 //------------------------------------------------------
-// PRODUCTS
+// PRODUCTS / RANGES
 //------------------------------------------------------
-function populateProductSelect() {
-    const select = document.getElementById("productSelect");
-    select.innerHTML = `<option value="">-- Choose a product --</option>`;
+function getProductsByCategory(category) {
+    return products.filter(p => p.category === category);
+}
 
-    products.forEach((p, index) => {
-        const opt = document.createElement("option");
-        opt.value = index;
-        opt.textContent = `${p.brand} - ${p.rangeName}`;
-        select.appendChild(opt);
+function openRangeModal() {
+    const type = document.getElementById("productTypeSelect").value;
+    const modal = document.getElementById("rangeModal");
+    const list = document.getElementById("rangeList");
+    const info = document.getElementById("rangeModalInfo");
+
+    if (!type) {
+        alert("Please choose a product type first.");
+        return;
+    }
+
+    const filtered = getProductsByCategory(type);
+    if (!filtered.length) {
+        list.innerHTML = `<p class="muted">No ranges found for this product type yet.</p>`;
+    } else {
+        list.innerHTML = filtered.map(p => `
+            <button class="range-btn" data-product-id="${p.id}">
+                <strong>${escapeHtml(p.brand)} – ${escapeHtml(p.rangeName)}</strong><br>
+                <span class="muted">${p.format === "pack" ? "Pack " + p.packSize + " m²" : "Sheet / Roll product"} – £${p.priceExVat.toFixed(2)} ex VAT</span>
+            </button>
+        `).join("");
+    }
+
+    info.textContent = "Choose a product range for the selected product type.";
+    modal.style.display = "flex";
+
+    // Attach handlers
+    list.querySelectorAll(".range-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const productId = btn.getAttribute("data-product-id");
+            selectRangeForActiveRoom(productId);
+            closeRangeModal();
+        });
     });
 }
 
-function updateProductDetails() {
-    const index = document.getElementById("productSelect").value;
-    const packSize = document.getElementById("packSize");
-    const price = document.getElementById("price");
-    const widthDropdown = document.getElementById("widthDropdown");
-    const widthLabel = document.getElementById("widthDropdownLabel");
-    const wastageInput = document.getElementById("wastage");
+function closeRangeModal() {
+    document.getElementById("rangeModal").style.display = "none";
+}
 
-    // Reset first
-    packSize.value = "";
-    price.value = "";
+function selectRangeForActiveRoom(productId) {
+    if (!activeRoomId) return;
+    const product = products.find(p => p.id === productId);
+    if (!product) return;
+
+    const room = rooms.find(r => r.id === activeRoomId);
+    if (!room) return;
+
+    if (!room.data) room.data = {};
+    room.data.productId = productId;
+    room.data.productType = product.category;
+    applyProductToUI(product);
+    calculateRoom(true);
+}
+
+function clearSelectedRangeForActiveRoom() {
+    if (!activeRoomId) return;
+    const room = rooms.find(r => r.id === activeRoomId);
+    if (!room) return;
+    if (!room.data) room.data = {};
+    delete room.data.productId;
+    delete room.data.productType;
+    document.getElementById("selectedRangeDisplay").textContent = "None selected";
+}
+
+function getActiveRoomProduct() {
+    if (!activeRoomId) return null;
+    const room = rooms.find(r => r.id === activeRoomId);
+    if (!room || !room.data || !room.data.productId) return null;
+    return products.find(p => p.id === room.data.productId) || null;
+}
+
+function applyProductToUI(product) {
+    const packSizeEl = document.getElementById("packSize");
+    const priceEl = document.getElementById("price");
+    const widthDropdown = document.getElementById("widthDropdown");
+    const widthLabel = document.getElementById("widthLabel");
+    const widthDropdownLabel = document.getElementById("widthDropdownLabel");
+    const wastageInput = document.getElementById("wastage");
+    const rangeDisplay = document.getElementById("selectedRangeDisplay");
+
+    // Reset
+    packSizeEl.value = "";
+    priceEl.value = "";
     widthDropdown.style.display = "none";
-    widthLabel.style.display = "none";
+    widthDropdownLabel.style.display = "none";
     widthDropdown.innerHTML = "";
     wastageInput.disabled = false;
+    widthLabel.textContent = "Room Width (m)";
+    rangeDisplay.textContent = product ? `${product.brand} – ${product.rangeName}` : "None selected";
 
-    if (index === "") return;
+    if (!product) return;
 
-    const p = products[index];
+    priceEl.value = product.priceExVat;
 
-    // Price (per pack or per m²)
-    if (p.tradePrice) {
-        price.value = p.tradePrice;
-    }
-
-    // Pack products
-    if (p.type === "pack") {
-        packSize.value = p.packSize;
+    if (product.format === "pack") {
+        packSizeEl.value = product.packSize;
         wastageInput.disabled = false;
-    }
-
-    // Sheet products
-    if (p.type === "sheet") {
+        if (!wastageInput.value || wastageInput.value < 0) {
+            wastageInput.value = 10;
+        }
+    } else if (product.format === "sheet") {
+        // Sheet goods: roll widths, no wastage, width label changes
         widthDropdown.style.display = "block";
-        widthLabel.style.display = "block";
+        widthDropdownLabel.style.display = "block";
 
-        p.availableWidths.forEach(w => {
+        product.rollWidths.forEach(w => {
             const opt = document.createElement("option");
             opt.value = w;
             opt.textContent = `${w} m`;
             widthDropdown.appendChild(opt);
         });
 
-        // For sheet goods, ignore wastage (set to 0 and disable)
         wastageInput.value = 0;
         wastageInput.disabled = true;
+        widthLabel.textContent = "Room Width - Actual (m)";
+
+        // Auto-pick roll width based on actual room width, if possible
+        autoSelectRollWidth(product);
     }
+}
+
+// Auto-select roll width >= room width, otherwise largest, no warnings
+function autoSelectRollWidth(product) {
+    const widthDropdown = document.getElementById("widthDropdown");
+    const roomWidth = parseFloat(document.getElementById("widthInput").value);
+    if (!product || product.format !== "sheet" || !Array.isArray(product.rollWidths) || !roomWidth) return;
+    const sorted = [...product.rollWidths].sort((a, b) => a - b);
+    let chosen = sorted[sorted.length - 1]; // default to largest
+    for (const w of sorted) {
+        if (w >= roomWidth) {
+            chosen = w;
+            break;
+        }
+    }
+    widthDropdown.value = chosen;
 }
 
 //------------------------------------------------------
 // ROOMS
 //------------------------------------------------------
+function showRoomForm(show) {
+    document.getElementById("roomForm").style.display = show ? "block" : "none";
+    document.getElementById("noRoomMessage").style.display = show ? "none" : "block";
+}
+
 function addRoom() {
     const name = prompt("Enter room name:");
     if (!name) return;
@@ -178,6 +273,7 @@ function renameRoom() {
     room.name = newName;
     updateRoomList();
     document.getElementById("roomTitle").textContent = newName;
+    calculateRoom(true);
 }
 
 function deleteRoom() {
@@ -197,6 +293,7 @@ function deleteRoom() {
         loadRoom(activeRoomId);
     } else {
         clearRoomForm();
+        showRoomForm(false);
         document.getElementById("roomTitle").textContent = "No room selected";
         document.getElementById("result").innerHTML = "";
     }
@@ -229,7 +326,9 @@ function updateRoomList() {
 }
 
 function clearRoomForm() {
-    document.getElementById("productSelect").value = "";
+    document.getElementById("productTypeSelect").value = "";
+    document.getElementById("selectedRangeDisplay").textContent = "None selected";
+
     document.getElementById("length").value = "";
     document.getElementById("widthInput").value = "";
     document.getElementById("wastage").value = 10;
@@ -240,10 +339,13 @@ function clearRoomForm() {
     document.getElementById("roomSavedMsg").textContent = "";
 
     const widthDropdown = document.getElementById("widthDropdown");
-    const widthLabel = document.getElementById("widthDropdownLabel");
+    const widthDropdownLabel = document.getElementById("widthDropdownLabel");
     widthDropdown.style.display = "none";
-    widthLabel.style.display = "none";
+    widthDropdownLabel.style.display = "none";
     widthDropdown.innerHTML = "";
+
+    const widthLabel = document.getElementById("widthLabel");
+    widthLabel.textContent = "Room Width (m)";
 
     const container = document.getElementById("roomAccessories");
     if (container) {
@@ -255,14 +357,21 @@ function loadRoom(id) {
     const room = rooms.find(r => r.id === id);
     if (!room) return;
 
+    showRoomForm(true);
     clearRoomForm();
     document.getElementById("roomTitle").textContent = room.name;
 
     const d = room.data || {};
 
-    if (d.productIndex !== undefined) {
-        document.getElementById("productSelect").value = d.productIndex;
-        updateProductDetails();
+    if (d.productType) {
+        document.getElementById("productTypeSelect").value = d.productType;
+    }
+
+    if (d.productId) {
+        const product = products.find(p => p.id === d.productId);
+        applyProductToUI(product || null);
+    } else {
+        applyProductToUI(null);
     }
 
     if (d.length) document.getElementById("length").value = d.length;
@@ -405,7 +514,7 @@ function renderAccessoriesPricingPanel() {
                 <tr>
                     <th>Name</th>
                     <th>Unit</th>
-                    <th>Price (£)</th>
+                    <th>Price (£ ex VAT)</th>
                     <th></th>
                 </tr>
             </thead>
@@ -443,6 +552,8 @@ function renderRoomAccessoriesPanel(savedAccessories) {
         return;
     }
 
+    const geometry = computeAreaValues();
+
     accessoriesDefs.forEach(def => {
         const row = document.createElement("div");
         row.className = "accessory-room-row";
@@ -476,9 +587,18 @@ function renderRoomAccessoriesPanel(savedAccessories) {
         qtyInput.id = `accQty_${def.id}`;
 
         let qtyVal = 0;
+
         if (stored && typeof stored.qty === "number") {
             qtyVal = stored.qty;
+        } else if (def.id === "doorbars") {
+            qtyVal = 1; // doorbars always default to 1
+        } else if (def.unit === "sqm" && geometry.hasGeometry) {
+            // default to sqm needed (areaPlusWaste for packs, roomArea for sheet)
+            qtyVal = geometry.areaForAccessories;
+        } else {
+            qtyVal = 0;
         }
+
         qtyInput.value = qtyVal.toFixed(2);
 
         qtyWrapper.appendChild(qtyLabel);
@@ -489,10 +609,64 @@ function renderRoomAccessoriesPanel(savedAccessories) {
 
         container.appendChild(row);
 
-        // Auto recalc when user changes selection / qty
-        cb.addEventListener("change", () => calculateRoom(true));
+        // When toggling accessory or changing qty, recalc
+        cb.addEventListener("change", () => {
+            // If just turned on and qty is 0, auto-fill again
+            if (cb.checked) {
+                const geo = computeAreaValues();
+                let q = parseFloat(qtyInput.value);
+                if (!q || q <= 0) {
+                    if (def.id === "doorbars") {
+                        q = 1;
+                    } else if (def.unit === "sqm" && geo.hasGeometry) {
+                        q = geo.areaForAccessories;
+                    } else {
+                        q = 0;
+                    }
+                    qtyInput.value = q.toFixed(2);
+                }
+            }
+            calculateRoom(true);
+        });
+
         qtyInput.addEventListener("input", () => calculateRoom(true));
     });
+}
+
+//------------------------------------------------------
+// GEOMETRY CALC
+//------------------------------------------------------
+function computeAreaValues() {
+    const length = parseFloat(document.getElementById("length").value);
+    const width = parseFloat(document.getElementById("widthInput").value);
+    const wastage = parseFloat(document.getElementById("wastage").value) || 0;
+    const product = getActiveRoomProduct();
+
+    if (!length || !width) {
+        return {
+            hasGeometry: false,
+            roomArea: 0,
+            areaPlusWaste: 0,
+            areaForAccessories: 0
+        };
+    }
+
+    const roomArea = length * width;
+    let areaPlusWaste = roomArea;
+
+    if (product && product.format === "pack") {
+        areaPlusWaste = roomArea * (1 + wastage / 100);
+    }
+
+    // Accessories sqm: use areaPlusWaste for packs, roomArea for sheet goods
+    const areaForAccessories = product && product.format === "pack" ? areaPlusWaste : roomArea;
+
+    return {
+        hasGeometry: true,
+        roomArea,
+        areaPlusWaste,
+        areaForAccessories
+    };
 }
 
 //------------------------------------------------------
@@ -509,17 +683,25 @@ function calculateRoom(auto = false) {
         return;
     }
 
-    const productIndexStr = document.getElementById("productSelect").value;
-    if (productIndexStr === "") {
-        if (!auto) alert("Please select a product.");
+    const room = rooms.find(r => r.id === activeRoomId);
+    if (!room) return;
+
+    const productType = document.getElementById("productTypeSelect").value;
+    if (!productType) {
+        if (!auto) alert("Please choose a product type and range.");
         resultDiv.innerHTML = "";
         return;
     }
 
-    const p = products[productIndexStr];
+    const product = getActiveRoomProduct();
+    if (!product) {
+        if (!auto) alert("Please click 'Select Range' and choose a product range.");
+        resultDiv.innerHTML = "";
+        return;
+    }
 
     const length = parseFloat(document.getElementById("length").value);
-    const widthInputEl = document.getElementById("widthInput");
+    const width = parseFloat(document.getElementById("widthInput").value);
     const widthDropdown = document.getElementById("widthDropdown");
     const wastage = parseFloat(document.getElementById("wastage").value) || 0;
     const packSize = parseFloat(document.getElementById("packSize").value);
@@ -531,7 +713,6 @@ function calculateRoom(auto = false) {
         return;
     }
 
-    const width = parseFloat(widthInputEl.value);
     if (!width || width <= 0) {
         if (!auto) alert("Please enter a valid room width.");
         resultDiv.innerHTML = "";
@@ -539,7 +720,7 @@ function calculateRoom(auto = false) {
     }
 
     let sheetWidthUsed = null;
-    if (p.type === "sheet" && widthDropdown.style.display !== "none") {
+    if (product.format === "sheet" && widthDropdown.style.display !== "none") {
         const val = parseFloat(widthDropdown.value);
         sheetWidthUsed = isNaN(val) ? null : val;
     }
@@ -550,17 +731,20 @@ function calculateRoom(auto = false) {
         return;
     }
 
-    const roomArea = length * width;
-    let areaPlusWaste = roomArea;
-
-    if (p.type === "pack") {
-        areaPlusWaste = roomArea * (1 + wastage / 100);
+    const geometry = computeAreaValues();
+    if (!geometry.hasGeometry) {
+        if (!auto) alert("Please enter valid room dimensions.");
+        resultDiv.innerHTML = "";
+        return;
     }
+
+    const roomArea = geometry.roomArea;
+    const areaPlusWaste = geometry.areaPlusWaste;
 
     let materialTotal = 0;
     let packsNeeded = null;
 
-    if (p.type === "pack") {
+    if (product.format === "pack") {
         if (!packSize || packSize <= 0) {
             if (!auto) alert("This product has no valid pack size.");
             resultDiv.innerHTML = "";
@@ -568,12 +752,11 @@ function calculateRoom(auto = false) {
         }
         packsNeeded = Math.ceil(areaPlusWaste / packSize);
         materialTotal = packsNeeded * price;
-    } else if (p.type === "sheet") {
-        // Sheet goods: price per m², no extra wastage logic
-        materialTotal = roomArea * price;
+    } else if (product.format === "sheet") {
+        materialTotal = roomArea * price; // price per m², no extra wastage logic
     }
 
-    // Accessories cost (qty always user-entered, default 0.00)
+    // Accessories cost
     let accessoryTotal = 0;
     let breakdownLines = [];
     let accessoriesSelections = {};
@@ -587,6 +770,18 @@ function calculateRoom(auto = false) {
         let qtyVal = parseFloat(qtyInput.value);
         if (!isFinite(qtyVal) || qtyVal < 0) qtyVal = 0;
 
+        // Default logic: if selected but qty is 0, set sensible defaults
+        if (selected && qtyVal <= 0) {
+            if (def.id === "doorbars") {
+                qtyVal = 1;
+            } else if (def.unit === "sqm" && geometry.hasGeometry) {
+                qtyVal = geometry.areaForAccessories;
+            }
+            if (qtyVal > 0) {
+                qtyInput.value = qtyVal.toFixed(2);
+            }
+        }
+
         let cost = 0;
         if (selected && qtyVal > 0 && def.price > 0) {
             cost = qtyVal * def.price;
@@ -594,7 +789,7 @@ function calculateRoom(auto = false) {
 
             const uLabel = unitDisplay(def.unit);
             breakdownLines.push(
-                `${def.name}: £${cost.toFixed(2)} (${qtyVal.toFixed(2)} ${uLabel} @ £${def.price.toFixed(2)})`
+                `${def.name}: £${cost.toFixed(2)} ex VAT (${qtyVal.toFixed(2)} ${uLabel} @ £${def.price.toFixed(2)})`
             );
         }
 
@@ -610,55 +805,54 @@ function calculateRoom(auto = false) {
     const lineTotal = materialTotal + accessoryTotal;
 
     // Build result HTML with clearer breakdown
+    const roomName = room.name || "Room";
     let html = `
-        <strong>Room Summary</strong><br>
+        <strong>${escapeHtml(roomName)} Summary</strong><br>
         Room area: ${roomArea.toFixed(2)} m²<br>
     `;
 
-    if (p.type === "pack") {
+    if (product.format === "pack") {
         html += `Area incl. ${wastage}% wastage: ${areaPlusWaste.toFixed(2)} m²<br>`;
     }
 
-    if (p.type === "sheet" && sheetWidthUsed) {
+    if (product.format === "sheet" && sheetWidthUsed) {
         html += `Roll width selected: ${sheetWidthUsed} m<br>`;
     }
 
-    html += `<br><strong>Material</strong><br>`;
-    if (p.type === "pack") {
+    html += `<br><strong>Material (ex VAT)</strong><br>`;
+    if (product.format === "pack") {
         html += `Packs required: ${packsNeeded}<br>`;
     }
-    html += `Material total: £${materialTotal.toFixed(2)}<br>`;
+    html += `Material total: £${materialTotal.toFixed(2)} ex VAT<br>`;
 
-    html += `<br><strong>Accessories</strong><br>`;
+    html += `<br><strong>Accessories (ex VAT)</strong><br>`;
     if (breakdownLines.length) {
         html += breakdownLines.join("<br>") + "<br>";
     } else {
         html += "None<br>";
     }
 
-    html += `<br><strong>Room total:</strong> £${lineTotal.toFixed(2)}`;
+    html += `<br><strong>Room total (ex VAT):</strong> £${lineTotal.toFixed(2)}`;
 
     resultDiv.innerHTML = `<div class="cost-block">${html}</div>`;
 
     // Save to room
-    const room = rooms.find(r => r.id === activeRoomId);
-    if (room) {
-        room.data = {
-            productIndex: parseInt(productIndexStr, 10),
-            length,
-            width,
-            sheetWidth: sheetWidthUsed,
-            wastage,
-            roomArea,
-            areaPlusWaste,
-            packsNeeded,
-            materialTotal,
-            accessoryTotal,
-            lineTotal,
-            accessories: accessoriesSelections,
-            resultHtml: resultDiv.innerHTML
-        };
-    }
+    room.data = {
+        productId: product.id,
+        productType,
+        length,
+        width,
+        sheetWidth: sheetWidthUsed,
+        wastage,
+        roomArea,
+        areaPlusWaste,
+        packsNeeded,
+        materialTotal,
+        accessoryTotal,
+        lineTotal,
+        accessories: accessoriesSelections,
+        resultHtml: resultDiv.innerHTML
+    };
 
     // Auto-update project summary
     updateSummary();
@@ -668,7 +862,8 @@ function calculateRoom(auto = false) {
 
     // Show a subtle "saved" message on manual calculate
     if (!auto) {
-        savedMsg.textContent = "✓ Room saved to project";
+        const savedMsg = document.getElementById("roomSavedMsg");
+        savedMsg.textContent = "✓ Room calculated & saved to project";
         setTimeout(() => {
             savedMsg.textContent = "";
         }, 1500);
@@ -692,20 +887,20 @@ function updateSummary() {
         const d = r.data;
         if (!d || !d.lineTotal) return "";
 
-        const p = products[d.productIndex];
-        const productName = p ? `${p.brand} - ${p.rangeName}` : "Product";
+        const product = products.find(p => p.id === d.productId);
+        const productName = product ? `${product.brand} – ${product.rangeName}` : "Product";
 
         grandTotal += d.lineTotal;
 
         return `
             <tr>
-                <td>${r.name}</td>
-                <td>${productName}</td>
+                <td>${escapeHtml(r.name)}</td>
+                <td>${escapeHtml(productName)}</td>
                 <td>${d.roomArea.toFixed(2)} m²</td>
-                <td>${p && p.type === "pack" ? (d.packsNeeded || 0) : "N/A"}</td>
-                <td>£${d.materialTotal.toFixed(2)}</td>
-                <td>£${d.accessoryTotal.toFixed(2)}</td>
-                <td>£${d.lineTotal.toFixed(2)}</td>
+                <td>${product && product.format === "pack" ? (d.packsNeeded || 0) : "N/A"}</td>
+                <td>£${d.materialTotal.toFixed(2)} ex VAT</td>
+                <td>£${d.accessoryTotal.toFixed(2)} ex VAT</td>
+                <td>£${d.lineTotal.toFixed(2)} ex VAT</td>
             </tr>
         `;
     }).join("");
@@ -730,7 +925,7 @@ function updateSummary() {
             </thead>
             <tbody>${rows}</tbody>
         </table>
-        <div class="summary-total">Grand Total: £${grandTotal.toFixed(2)}</div>
+        <div class="summary-total">Grand Total (ex VAT): £${grandTotal.toFixed(2)}</div>
     `;
 
     contentDiv.innerHTML = tableHtml;
@@ -834,6 +1029,7 @@ function loadCustomer(c) {
         loadRoom(activeRoomId);
     } else {
         clearRoomForm();
+        showRoomForm(false);
         document.getElementById("roomTitle").textContent = "No room selected";
         document.getElementById("result").innerHTML = "";
     }
@@ -857,6 +1053,7 @@ function newCustomer() {
 
     updateRoomList();
     clearRoomForm();
+    showRoomForm(false);
     document.getElementById("roomTitle").textContent = "No room selected";
     document.getElementById("result").innerHTML = "";
     document.getElementById("summaryContent").innerHTML = `<p class="muted">No rooms calculated yet.</p>`;
