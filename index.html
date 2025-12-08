@@ -8,12 +8,12 @@
 </head>
 <body>
 
-<h1>MeasureIQ</h1>
+<h1 class="no-print">MeasureIQ</h1>
 
 <div class="layout">
 
     <!-- LEFT COLUMN: CUSTOMER + ROOMS -->
-    <div class="project">
+    <div class="project no-print">
         <h2>Customer Details</h2>
 
         <label for="customerName">Customer Name</label>
@@ -40,10 +40,12 @@
     <div class="right-column">
 
         <!-- TABS -->
-        <div class="tabs">
+        <div class="tabs no-print">
             <button class="tab-btn active" data-tab="calculatorSection">Room Calculator</button>
             <button class="tab-btn" data-tab="accessoriesSection">Accessories Pricing</button>
             <button class="tab-btn" data-tab="summarySection">Project Summary</button>
+            <button class="tab-btn" data-tab="quoteSection">Quote Builder</button>
+            <button class="tab-btn" data-tab="businessProfileSection">Business Profile</button>
         </div>
 
         <!-- TAB: ROOM CALCULATOR -->
@@ -63,15 +65,7 @@
                         </div>
                     </div>
 
-                    <!-- PRODUCT TYPE + RANGE -->
-                    <label for="productTypeSelect">Product Type</label>
-                    <select id="productTypeSelect">
-                        <option value="">-- Choose product type --</option>
-                        <option value="carpet">Carpet / Sheet Vinyl</option>
-                        <option value="hard">Hard Flooring / LVT</option>
-                        <option value="woodlam">Wood / Laminate</option>
-                    </select>
-
+                    <!-- PRODUCT RANGE -->
                     <div class="product-range-row">
                         <div class="product-range-info">
                             <label>Selected Range</label>
@@ -88,7 +82,7 @@
                     <label for="length">Room Length (m)</label>
                     <input type="number" id="length" step="0.01" min="0">
 
-                    <label for="widthInput" id="widthLabel">Room Width (m)</label>
+                    <label for="widthInput" id="widthLabel">Room Width - Actual (m)</label>
                     <input type="number" id="widthInput" step="0.01" min="0">
 
                     <!-- SHEET ROLL WIDTH DROPDOWN (OPTIONAL) -->
@@ -164,14 +158,114 @@
             </div>
         </div>
 
-        <!-- TAB: PROJECT SUMMARY -->
+        <!-- TAB: PROJECT SUMMARY (INTERNAL) -->
         <div id="summarySection" class="tab-panel" style="display:none;">
             <div id="summary" class="summary">
-                <h2>Project Summary</h2>
+                <h2>Project Summary (Internal)</h2>
                 <div id="summaryContent" class="summary-content">
                     <p class="muted">No rooms calculated yet.</p>
                 </div>
-                <button id="printBtn" class="btn secondary">Print / PDF Export</button>
+                <button id="printBtn" class="btn secondary no-print">Print / PDF (Internal View)</button>
+            </div>
+        </div>
+
+        <!-- TAB: QUOTE BUILDER (CLIENT FACING) -->
+        <div id="quoteSection" class="tab-panel" style="display:none;">
+            <div id="quoteBuilder" class="summary">
+                <h2>Customer Quote</h2>
+
+                <div class="quote-controls no-print">
+                    <div>
+                        <label for="quoteMarkup">Material markup (%)</label>
+                        <input type="number" id="quoteMarkup" min="0" step="1" />
+                    </div>
+                    <div class="quote-toggle">
+                        <label>
+                            <input type="checkbox" id="quoteShowAccessories">
+                            Show accessories on customer quote
+                        </label>
+                    </div>
+                </div>
+
+                <div id="quoteContent" class="quote-content"></div>
+
+                <div class="quote-notes no-print">
+                    <label for="quoteNotes">Notes / Terms</label>
+                    <textarea id="quoteNotes" rows="4" placeholder="e.g. Quote valid for 30 days, subfloor preparation excluded unless stated..."></textarea>
+                </div>
+
+                <button id="quotePrintBtn" class="btn secondary no-print">Print / PDF Customer Quote</button>
+            </div>
+        </div>
+
+        <!-- TAB: BUSINESS PROFILE -->
+        <div id="businessProfileSection" class="tab-panel" style="display:none;">
+            <div class="panel business-panel">
+                <h2>Business Profile</h2>
+                <p class="muted">
+                    These details appear on your customer quotes. They are saved locally in your browser.
+                </p>
+
+                <div class="bp-grid">
+                    <div>
+                        <label for="bpBusinessName">Business Name</label>
+                        <input type="text" id="bpBusinessName" placeholder="e.g. ABC Flooring Ltd">
+                    </div>
+                    <div>
+                        <label for="bpContactName">Contact Name</label>
+                        <input type="text" id="bpContactName" placeholder="Your name">
+                    </div>
+                    <div>
+                        <label for="bpAddress1">Address Line 1</label>
+                        <input type="text" id="bpAddress1">
+                    </div>
+                    <div>
+                        <label for="bpAddress2">Address Line 2</label>
+                        <input type="text" id="bpAddress2">
+                    </div>
+                    <div>
+                        <label for="bpTown">Town / City</label>
+                        <input type="text" id="bpTown">
+                    </div>
+                    <div>
+                        <label for="bpPostcode">Postcode</label>
+                        <input type="text" id="bpPostcode">
+                    </div>
+                    <div>
+                        <label for="bpPhone">Phone</label>
+                        <input type="text" id="bpPhone">
+                    </div>
+                    <div>
+                        <label for="bpEmail">Email</label>
+                        <input type="email" id="bpEmail">
+                    </div>
+                    <div>
+                        <label for="bpWebsite">Website</label>
+                        <input type="text" id="bpWebsite">
+                    </div>
+                    <div>
+                        <label for="bpVatNumber">VAT Number (optional)</label>
+                        <input type="text" id="bpVatNumber">
+                    </div>
+                    <div>
+                        <label for="bpDefaultMarkup">Default material markup (%)</label>
+                        <input type="number" id="bpDefaultMarkup" min="0" step="1">
+                    </div>
+                    <div class="bp-checkbox">
+                        <label>
+                            <input type="checkbox" id="bpShowAccessories">
+                            Show accessories on customer quote by default
+                        </label>
+                    </div>
+                </div>
+
+                <div class="bp-notes">
+                    <label for="bpDefaultNotes">Default Notes / Terms</label>
+                    <textarea id="bpDefaultNotes" rows="4" placeholder="Standard terms you want to appear on every quote."></textarea>
+                </div>
+
+                <button id="saveBusinessProfileBtn" class="btn primary">Save Business Profile</button>
+                <span id="businessSavedMsg" class="small-note"></span>
             </div>
         </div>
 
@@ -179,14 +273,14 @@
 </div>
 
 <!-- RANGE SELECT MODAL -->
-<div id="rangeModal" class="modal">
+<div id="rangeModal" class="modal no-print">
     <div class="modal-content">
         <div class="modal-header">
             <h3>Select Product Range</h3>
             <button id="closeRangeModalBtn" class="modal-close">&times;</button>
         </div>
         <div class="modal-body">
-            <p class="muted" id="rangeModalInfo">Choose a product range for the selected product type.</p>
+            <p class="muted" id="rangeModalInfo">Choose a product range.</p>
             <div id="rangeList"></div>
         </div>
     </div>
