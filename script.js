@@ -9,6 +9,7 @@ const CUSTOMER_KEY = "measureiq_customers_v1";
 const ACCESSORY_DEFS_KEY = "measureiq_accessories_definitions_v1";
 const BUSINESS_PROFILE_KEY = "measureiq_business_profile_v1";
 const AUTH_TOKEN_KEY = "measureiq_auth_token_v1";
+const API_BASE = "https://measureiq-production.up.railway.app";
 
 let authUser = null; // { email }
 const VAT_RATE = 0.2;
