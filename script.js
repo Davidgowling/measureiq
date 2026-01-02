@@ -234,9 +234,8 @@ document.getElementById("forgotPasswordBtn")?.addEventListener("click", async (e
     }
 
     try {
-        await fetch("/api/auth/forgot-password", {
+        await apiFetch("/api/auth/forgot-password", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email })
         });
 
