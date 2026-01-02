@@ -104,21 +104,36 @@ function isSignedIn() {
 }
 
 async function apiFetch(path, options = {}) {
-    const headers = Object.assign({ "Content-Type": "application/json" }, options.headers || {});
+    const headers = Object.assign(
+        { "Content-Type": "application/json" },
+        options.headers || {}
+    );
+
     const token = getToken();
     if (token) headers.Authorization = `Bearer ${token}`;
-    const res = await fetch(path, { ...options, headers });
+
+    const res = await fetch(`${API_BASE}${path}`, {
+        ...options,
+        headers
+    });
+
     let data = null;
     const contentType = res.headers.get("content-type") || "";
+
     if (contentType.includes("application/json")) {
         data = await res.json();
     } else {
         data = await res.text();
     }
+
     if (!res.ok) {
-        const msg = (data && data.error) ? data.error : (typeof data === "string" ? data : "Request failed");
+        const msg =
+            (data && data.error)
+                ? data.error
+                : (typeof data === "string" ? data : "Request failed");
         throw new Error(msg);
     }
+
     return data;
 }
 
