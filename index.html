@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MeasureIQ</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="topbar no-print">
+    <div class="brand">
+        <h1>MeasureIQ</h1>
+        <span id="syncBadge" class="badge">Sign in required</span>
+    </div>
+    <div class="auth">
+        <span id="authStatus" class="muted">Not signed in</span>
+        <button id="openAuthBtn" class="btn secondary">Sign in</button>
+        <button id="logoutBtn" class="btn danger" style="display:none;">Logout</button>
+    </div>
+</div>
+
+<!-- Auth Modal -->
+<div id="authModal" class="modal" style="display:none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Sign in</h2>
+            <button id="closeAuthModalBtn" class="btn danger">✕</button>
+        </div>
+
+        <div class="auth-grid">
+            <div class="auth-card">
+                <h3>Login</h3>
+                <label for="loginEmail">Email</label>
+                <input id="loginEmail" type="email" placeholder="you@company.com" />
+                <label for="loginPassword">Password</label>
+                <input id="loginPassword" type="password" placeholder="••••••••" />
+               <button id="loginBtn" class="btn primary full-width">Login</button>
+
+            <button
+                id="forgotPasswordBtn"
+                type="button"
+                class="btn link full-width"
+                style="margin-top:6px;"
+            >
+                Forgot password?
+            </button>
+
+            <div id="loginMsg" class="small-note"></div>
+            <div id="forgotMsg" class="small-note"></div>
+
+         </div>
+
+            <div class="auth-card">
+                <h3>Create account</h3>
+                <label for="registerEmail">Email</label>
+                <input id="registerEmail" type="email" placeholder="you@company.com" />
+                <label for="registerPassword">Password</label>
+                <input id="registerPassword" type="password" placeholder="Minimum 8 characters" />
+                <button id="registerBtn" class="btn secondary full-width">Register</button>
+                <div id="registerMsg" class="small-note"></div>
+            </div>
+        </div>
+
+        <p class="muted" style="margin-top:10px;">
+            Sign in or create an account to use MeasureIQ. Your data is stored securely in the cloud so you can access it on any device.
+        </p>
+    </div>
+</div>
+
+
+<!-- Cloud-only lock overlay -->
+<div id="lockOverlay" class="lock-overlay" style="display:none;">
+    <div class="lock-card">
+        <h2>Sign in required</h2>
+        <p class="muted">Create an account or sign in to access your customers, rooms, and quotes.</p>
+        <button id="lockSignInBtn" class="btn primary">Sign in</button>
+    </div>
+</div>
+
+<div class="layout">
+
+    <!-- LEFT COLUMN: CUSTOMER + ROOMS -->
+    <div class="project no-print">
+        <h2>Customer Details</h2>
+
+        <label for="customerName">Customer Name</label>
+        <input type="text" id="customerName" placeholder="Enter customer name">
+
+        <label for="jobRef">Job Reference (optional)</label>
+        <input type="text" id="jobRef" placeholder="Enter job reference">
+
+        <div class="customer-actions">
+            <button id="saveCustomerBtn" class="btn primary">Save Customer</button>
+            <button id="newCustomerBtn" class="btn secondary">New Customer</button>
+        </div>
+
+        <h3>Saved Customers</h3>
+        <ul id="savedCustomersList" class="saved-list"></ul>
+
+        <h2>Rooms</h2>
+        <button id="addRoomBtn" class="btn secondary full-width">+ Add Room</button>
+
+        <ul id="roomList" class="room-list"></ul>
+    </div>
+
+    <!-- RIGHT COLUMN: TABS + PANELS -->
+    <div class="right-column">
+
+        <!-- TABS -->
+        <div class="tabs no-print">
+            <button class="tab-btn active" data-tab="calculatorSection">Room Calculator</button>
+            <button class="tab-btn" data-tab="accessoriesSection">Accessories Pricing</button>
+            <button class="tab-btn" data-tab="summarySection">Project Summary</button>
+            <button class="tab-btn" data-tab="quoteSection">Quote Builder</button>
+            <button class="tab-btn" data-tab="businessProfileSection">Business Profile</button>
+        </div>
+
+        <!-- TAB: ROOM CALCULATOR -->
+        <div id="calculatorSection" class="tab-panel">
+            <div class="calculator" id="roomCalculator">
+                <div id="noRoomMessage" class="muted">
+                    Add a room on the left to begin.
+                </div>
+
+                <div id="roomForm" style="display:none;">
+
+                    <div class="room-header">
+                        <h2 id="roomTitle">No room selected</h2>
+                        <div class="room-actions">
+                            <button id="editRoomBtn" class="btn secondary">Rename</button>
+                            <button id="deleteRoomBtn" class="btn danger">Delete</button>
+                        </div>
+                    </div>
+
+                    <!-- PRODUCT RANGE -->
+                    <div class="product-range-row">
+                        <div class="product-range-info">
+                            <label>Selected Range</label>
+                            <div id="selectedRangeDisplay" class="range-display">
+                                None selected
+                            </div>
+                        </div>
+                        <div class="product-range-action">
+                            <button id="selectRangeBtn" class="btn secondary full-width">Select Range</button>
+                        </div>
+                    </div>
+
+                    <!-- ROOM DIMENSIONS -->
+                    <label for="length">Room Length (m)</label>
+                    <input type="number" id="length" step="0.01" min="0">
+
+                    <label for="widthInput" id="widthLabel">Room Width - Actual (m)</label>
+                    <input type="number" id="widthInput" step="0.01" min="0">
+
+                    <!-- SHEET ROLL WIDTH DROPDOWN (OPTIONAL) -->
+                    <label for="widthDropdown" id="widthDropdownLabel" style="display:none;">Roll Width (m)</label>
+                    <select id="widthDropdown" style="display:none;"></select>
+
+                    <!-- WASTAGE -->
+                    <label for="wastage">Wastage (%)</label>
+                    <input type="number" id="wastage" value="10" min="0" max="100">
+
+                    <!-- AUTO-FILLED PRODUCT FIELDS -->
+                    <label for="packSize">Pack Size (m² per pack)</label>
+                    <input type="number" id="packSize" readonly>
+
+                    <label for="price">Trade Price (£ ex VAT)</label>
+                    <input type="number" id="price" readonly>
+
+                    <!-- ACCESSORIES SECTION (DYNAMIC) -->
+                    <div class="accessories-section">
+                        <h3>Accessories</h3>
+                        <div id="roomAccessories"></div>
+                    </div>
+
+                    <!-- CALCULATE -->
+                    <button id="calculateBtn" class="btn primary full-width">Calculate &amp; Save</button>
+                    <div id="roomSavedMsg" class="small-note"></div>
+
+                    <!-- OUTPUT -->
+                    <div id="result" class="result"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB: ACCESSORIES PRICING -->
+        <div id="accessoriesSection" class="tab-panel" style="display:none;">
+            <div class="panel accessories-panel">
+                <h2>Accessories Pricing</h2>
+                <p class="muted">
+                    Add and manage accessories here (e.g. underlay, gripper, screed). These will appear in the room
+                    calculator with checkboxes and quantity boxes. Prices are stored in your account (cloud) and are ex VAT.
+                </p>
+
+                <div id="accessoriesPricingList"></div>
+
+                <div class="add-accessory">
+                    <h3>Add Accessory</h3>
+
+                    <div class="accessory-row">
+                        <label for="newAccName">Name</label>
+                        <input type="text" id="newAccName" placeholder="e.g. Screed, Plyboard, Uplift & Disposal">
+                    </div>
+
+                    <div class="accessory-row two-col">
+                        <div>
+                            <label for="newAccUnit">Unit</label>
+                            <select id="newAccUnit">
+                                <option value="sqm">per m²</option>
+                                <option value="lm">per metre</option>
+                                <option value="item">per item</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="newAccPrice">Price (£ ex VAT)</label>
+                            <input type="number" id="newAccPrice" step="0.01" min="0">
+                        </div>
+                    </div>
+
+                    <button id="addAccessoryBtn" class="btn secondary">Add Accessory</button>
+                </div>
+
+                <button id="saveAccessoriesBtn" class="btn primary">Save All Accessories</button>
+                <span id="accessoriesSavedMsg" class="small-note"></span>
+            </div>
+        </div>
+
+        <!-- TAB: PROJECT SUMMARY (INTERNAL) -->
+        <div id="summarySection" class="tab-panel" style="display:none;">
+            <div id="summary" class="summary">
+                <h2>Project Summary (Internal)</h2>
+                <div id="summaryContent" class="summary-content">
+                    <p class="muted">No rooms calculated yet.</p>
+                </div>
+                <button id="printBtn" class="btn secondary no-print">Print / PDF (Internal View)</button>
+            </div>
+        </div>
+
+        <!-- TAB: QUOTE BUILDER (CLIENT FACING) -->
+        <div id="quoteSection" class="tab-panel" style="display:none;">
+            <div id="quoteBuilder" class="summary">
+                <h2>Customer Quote</h2>
+
+                <div class="quote-controls no-print">
+                    <div>
+                        <label for="quoteMarkup">Material markup (%)</label>
+                        <input type="number" id="quoteMarkup" min="0" step="1" />
+                    </div>
+                    <div class="quote-toggle">
+                        <label>
+                            <input type="checkbox" id="quoteShowAccessories">
+                            Show accessories on customer quote
+                        </label>
+                    </div>
+                </div>
+
+                <div id="quoteContent" class="quote-content"></div>
+
+                <div class="quote-notes no-print">
+                    <label for="quoteNotes">Notes / Terms</label>
+                    <textarea id="quoteNotes" rows="4" placeholder="e.g. Quote valid for 30 days, subfloor preparation excluded unless stated..."></textarea>
+                </div>
+
+                <button id="quotePrintBtn" class="btn secondary no-print">Print / PDF Customer Quote</button>
+            </div>
+        </div>
+
+        <!-- TAB: BUSINESS PROFILE -->
+        <div id="businessProfileSection" class="tab-panel" style="display:none;">
+            <div class="panel business-panel">
+                <h2>Business Profile</h2>
+                <p class="muted">
+                    These details appear on your customer quotes. They are saved locally in your browser.
+                </p>
+
+                <div class="bp-grid">
+                    <div>
+                        <label for="bpBusinessName">Business Name</label>
+                        <input type="text" id="bpBusinessName" placeholder="e.g. ABC Flooring Ltd">
+                    </div>
+                    <div>
+                        <label for="bpContactName">Contact Name</label>
+                        <input type="text" id="bpContactName" placeholder="Your name">
+                    </div>
+                    <div>
+                        <label for="bpAddress1">Address Line 1</label>
+                        <input type="text" id="bpAddress1">
+                    </div>
+                    <div>
+                        <label for="bpAddress2">Address Line 2</label>
+                        <input type="text" id="bpAddress2">
+                    </div>
+                    <div>
+                        <label for="bpTown">Town / City</label>
+                        <input type="text" id="bpTown">
+                    </div>
+                    <div>
+                        <label for="bpPostcode">Postcode</label>
+                        <input type="text" id="bpPostcode">
+                    </div>
+                    <div>
+                        <label for="bpPhone">Phone</label>
+                        <input type="text" id="bpPhone">
+                    </div>
+                    <div>
+                        <label for="bpEmail">Email</label>
+                        <input type="email" id="bpEmail">
+                    </div>
+                    <div>
+                        <label for="bpWebsite">Website</label>
+                        <input type="text" id="bpWebsite">
+                    </div>
+                    <div>
+                        <label for="bpVatNumber">VAT Number (optional)</label>
+                        <input type="text" id="bpVatNumber">
+                    </div>
+                    <div>
+                        <label for="bpDefaultMarkup">Default material markup (%)</label>
+                        <input type="number" id="bpDefaultMarkup" min="0" step="1">
+                    </div>
+                    <div class="bp-checkbox">
+                        <label>
+                            <input type="checkbox" id="bpShowAccessories">
+                            Show accessories on customer quote by default
+                        </label>
+                    </div>
+                </div>
+
+                <div class="bp-notes">
+                    <label for="bpDefaultNotes">Default Notes / Terms</label>
+                    <textarea id="bpDefaultNotes" rows="4" placeholder="Standard terms you want to appear on every quote."></textarea>
+                </div>
+
+                <button id="saveBusinessProfileBtn" class="btn primary">Save Business Profile</button>
+                <span id="businessSavedMsg" class="small-note"></span>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- RANGE SELECT MODAL -->
+<div id="rangeModal" class="modal no-print">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Select Product Range</h3>
+            <button id="closeRangeModalBtn" class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p class="muted" id="rangeModalInfo">Choose a product range.</p>
+            <div id="rangeList"></div>
+        </div>
+    </div>
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>

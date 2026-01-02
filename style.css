@@ -1,0 +1,692 @@
+/* ---------- BASE LAYOUT ---------- */
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    margin: 0;
+    padding: 20px;
+    background: #f5f7fb;
+    color: #1c2537;
+}
+
+/* -----------------------------------------------------
+   TOP BAR + AUTH
+----------------------------------------------------- */
+.topbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:14px 18px;
+  border-bottom:1px solid #e6e6e6;
+  background:#fff;
+  position:sticky;
+  top:0;
+  z-index:10;
+}
+.topbar .brand{display:flex; align-items:baseline; gap:10px;}
+.topbar h1{margin:0; font-size:22px;}
+.badge{
+  display:inline-block;
+  padding:4px 8px;
+  border-radius:999px;
+  font-size:12px;
+  border:1px solid #e6e6e6;
+  background:#fafafa;
+}
+.auth{display:flex; align-items:center; gap:10px;}
+
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.35);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+  z-index:999;
+}
+.modal-content{
+  background:#fff;
+  width:min(860px, 100%);
+  border-radius:14px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.2);
+  padding:16px;
+}
+.modal-header{display:flex; align-items:center; justify-content:space-between; gap:10px;}
+.auth-grid{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:10px;}
+.auth-card{border:1px solid #e6e6e6; border-radius:12px; padding:14px; background:#fafafa;}
+@media (max-width: 780px){
+  .auth-grid{grid-template-columns:1fr;}
+}
+
+/* The app title now lives in the topbar */
+
+h2, h3 {
+    margin-top: 0;
+}
+
+/* Two-column layout on desktop */
+.layout {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+/* Stack on mobile */
+@media (max-width: 800px) {
+    .layout {
+        flex-direction: column;
+    }
+}
+
+/* ---------- PANELS ---------- */
+
+.project,
+.calculator,
+.summary,
+.panel {
+    background: #ffffff;
+    padding: 16px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.project {
+    flex: 0 0 280px;
+}
+
+.right-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* ---------- FORMS ---------- */
+
+label {
+    display: block;
+    margin-top: 10px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+input,
+select,
+textarea {
+    width: 100%;
+    padding: 8px 10px;
+    margin-top: 4px;
+    border-radius: 6px;
+    border: 1px solid #ccd2e0;
+    font-size: 0.95rem;
+    font-family: inherit;
+}
+
+/* ---------- BUTTONS ---------- */
+
+.btn {
+    display: inline-block;
+    padding: 8px 14px;
+    margin-top: 10px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+.btn.primary {
+    background: #001f3f;          /* Navy */
+    color: #ffffff;
+}
+
+.btn.primary:hover {
+    background: #022954;
+}
+
+.btn.secondary {
+    background: #e4e8f3;
+    color: #1c2537;
+}
+
+.btn.secondary:hover {
+    background: #d3d9eb;
+}
+
+.btn.danger {
+    background: #d9534f;
+    color: #ffffff;
+}
+
+.btn.danger:hover {
+    background: #c0392b;
+}
+
+.btn.full-width {
+    width: 100%;
+}
+
+.btn.small {
+    padding: 4px 8px;
+    font-size: 0.8rem;
+}
+
+/* ---------- CUSTOMER + ROOMS ---------- */
+
+.customer-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.saved-list {
+    list-style: none;
+    padding: 0;
+    margin-top: 8px;
+}
+
+.saved-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 8px;
+    background: #f5f7fb;
+    border-radius: 6px;
+    margin-bottom: 6px;
+    cursor: pointer;
+    border: 1px solid #dde2f0;
+    font-size: 0.9rem;
+}
+
+.saved-list li:hover {
+    background: #e7ecfa;
+}
+
+.saved-list .delete-btn {
+    color: #d9534f;
+    font-weight: bold;
+    margin-left: 10px;
+    cursor: pointer;
+}
+
+.room-list {
+    list-style: none;
+    padding: 0;
+    margin-top: 10px;
+}
+
+.room-list li {
+    margin-bottom: 6px;
+}
+
+.room-list button {
+    width: 100%;
+    text-align: left;
+}
+
+/* ---------- TABS ---------- */
+
+.tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid #ccd2e0;
+    background: #f5f7fb;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.tab-btn.active {
+    background: #001f3f;
+    color: #ffffff;
+    border-color: #001f3f;
+}
+
+/* ---------- ROOM HEADER ---------- */
+
+.room-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.room-actions .btn {
+    margin-left: 6px;
+}
+
+/* ---------- PRODUCT RANGE ROW ---------- */
+
+.product-range-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.range-display {
+    margin-top: 4px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid #ccd2e0;
+    background: #f5f7fb;
+    font-size: 0.9rem;
+}
+
+/* ---------- ROOM ACCESSORIES (DYNAMIC) ---------- */
+
+.accessories-section {
+    margin-top: 14px;
+    padding-top: 10px;
+    border-top: 1px solid #dde2f0;
+}
+
+.accessories-section h3 {
+    margin: 0 0 6px;
+    font-size: 0.95rem;
+}
+
+.accessory-room-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 6px;
+    padding: 6px 0;
+    border-bottom: 1px dashed #eef1f8;
+}
+
+.accessory-room-row:last-child {
+    border-bottom: none;
+}
+
+.checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+}
+
+.checkbox input[type="checkbox"] {
+    width: auto;
+}
+
+.accessory-qty {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+}
+
+.accessory-qty input[type="number"] {
+    width: 90px;
+}
+
+/* ---------- ACCESSORIES PRICING PANEL ---------- */
+
+.accessories-panel {
+    padding: 16px;
+}
+
+.accessory-row {
+    margin-top: 10px;
+}
+
+.accessory-row.two-col {
+    display: flex;
+    gap: 10px;
+}
+
+.accessory-row.two-col > div {
+    flex: 1;
+}
+
+.accessories-table {
+    margin-top: 10px;
+}
+
+.accessories-table input,
+.accessories-table select {
+    width: 100%;
+}
+
+/* ---------- RESULT + SUMMARY ---------- */
+
+.result {
+    margin-top: 12px;
+    font-size: 0.9rem;
+}
+
+.cost-block {
+    margin-top: 10px;
+    padding: 12px;
+    background: #eef2fa;
+    border-radius: 8px;
+    border: 1px solid #d3d9eb;
+    line-height: 1.4;
+}
+
+.summary {
+    margin-top: 10px;
+}
+
+.summary-content {
+    margin-top: 8px;
+}
+
+.summary-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 10px;
+    font-size: 0.9rem;
+}
+
+.summary-table th,
+.summary-table td {
+    border: 1px solid #dde2f0;
+    padding: 6px 8px;
+}
+
+.summary-table th {
+    background: #f5f7fb;
+    text-align: left;
+}
+
+.summary-total {
+    text-align: right;
+    font-weight: 700;
+    margin-top: 4px;
+}
+
+/* ---------- BUSINESS PROFILE ---------- */
+
+.business-panel {
+    padding: 16px;
+}
+
+.bp-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px 16px;
+    margin-top: 10px;
+}
+
+.bp-checkbox {
+    display: flex;
+    align-items: center;
+    margin-top: 20px;
+}
+
+.bp-notes {
+    margin-top: 12px;
+}
+
+/* ---------- QUOTE BUILDER ---------- */
+
+.quote-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.quote-controls > div {
+    flex: 1;
+    min-width: 200px;
+}
+
+.quote-toggle {
+    display: flex;
+    align-items: flex-end;
+}
+
+.quote-content {
+    margin-top: 8px;
+    background: #ffffff;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #d3d9eb;
+}
+
+.quote-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    border-bottom: 1px solid #dde2f0;
+    padding-bottom: 8px;
+    margin-bottom: 10px;
+}
+
+.quote-business {
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.quote-business strong {
+    font-size: 1rem;
+}
+
+.quote-meta {
+    font-size: 0.85rem;
+    text-align: right;
+    white-space: pre-line;
+}
+
+.quote-customer {
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+}
+
+.quote-rooms-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+}
+
+.quote-rooms-table th,
+.quote-rooms-table td {
+    border: 1px solid #dde2f0;
+    padding: 6px 8px;
+}
+
+.quote-rooms-table th {
+    background: #f5f7fb;
+}
+
+.quote-totals {
+    font-size: 0.9rem;
+    text-align: right;
+    line-height: 1.5;
+    margin-top: 6px;
+}
+
+.quote-totals strong {
+    font-size: 1rem;
+}
+
+.quote-notes {
+    margin-top: 10px;
+}
+
+/* ---------- MISC ---------- */
+
+.muted {
+    color: #7a8195;
+    font-size: 0.9rem;
+}
+
+.small-note {
+    margin-left: 2px;
+    font-size: 0.85rem;
+    color: #2e7d32;
+    min-height: 1em;
+}
+
+.no-print {
+    /* explicitly hidden in print via @media print */
+}
+
+/* ---------- MODAL ---------- */
+
+.modal {
+    display: none; /* shown via JS */
+    position: fixed;
+    z-index: 999;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background: #ffffff;
+    width: 95%;
+    max-width: 520px;
+    border-radius: 10px;
+    padding: 12px 16px 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-close {
+    background: transparent;
+    border: none;
+    font-size: 1.4rem;
+    cursor: pointer;
+}
+
+.modal-body {
+    margin-top: 8px;
+}
+
+#rangeList {
+    margin-top: 8px;
+    max-height: 320px;
+    overflow-y: auto;
+}
+
+/* Range buttons in modal */
+.range-group-title {
+    margin-top: 12px;
+    margin-bottom: 4px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #1c2537;
+}
+
+.range-btn {
+    width: 100%;
+    text-align: left;
+    padding: 8px 10px;
+    margin-bottom: 6px;
+    border-radius: 6px;
+    border: 1px solid #dde2f0;
+    background: #f5f7fb;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.range-btn strong {
+    display: block;
+}
+
+.range-btn span.muted {
+    font-size: 0.8rem;
+}
+
+.range-btn:hover {
+    background: #e4e8f3;
+}
+
+/* ---------- PRINT STYLES ---------- */
+
+@media print {
+    body {
+        background: #ffffff;
+        padding: 0;
+        margin: 0;
+    }
+
+    .no-print,
+    .project,
+    .tabs,
+    .modal {
+        display: none !important;
+    }
+
+    #calculatorSection,
+    #accessoriesSection,
+    #summarySection,
+    #businessProfileSection {
+        display: none !important;
+    }
+
+    /* Only show the Quote Builder content when printing */
+    #quoteSection {
+        display: block !important;
+    }
+
+    #quoteBuilder {
+        box-shadow: none;
+        border-radius: 0;
+        border: none;
+        padding: 0;
+    }
+
+    .quote-content {
+        border: none;
+    }
+}
+
+/* ---------------------------------------
+   Cloud-only lock
+----------------------------------------*/
+body.locked .layout {
+    pointer-events: none;
+    user-select: none;
+    filter: blur(2px);
+}
+
+.lock-overlay {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.45);
+    z-index: 900; /* above app */
+    padding: 20px;
+
+    pointer-events: none; 
+}
+
+.lock-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 18px 18px 14px 18px;
+    width: min(520px, 100%);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+}
+
+.lock-card h2 {
+    margin: 0 0 6px 0;
+}

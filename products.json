@@ -1,0 +1,47 @@
+[
+  {
+    "id": "lw-halo",
+    "brand": "Loom & Weave",
+    "rangeName": "Halo",
+    "group": "LVT & Hard Flooring (Pack)",
+    "format": "pack",
+    "packSize": 2.2,
+    "priceExVat": 29.99
+  },
+  {
+    "id": "bc-signature",
+    "brand": "Brampton Chase",
+    "rangeName": "Signature",
+    "group": "LVT & Hard Flooring (Pack)",
+    "format": "pack",
+    "packSize": 2.5,
+    "priceExVat": 41.0
+  },
+  {
+    "id": "dms-twist-pile",
+    "brand": "DMS Carpet",
+    "rangeName": "Twist Pile",
+    "group": "Carpet & Vinyl (Sheet)",
+    "format": "sheet",
+    "rollWidths": [2, 3, 4, 5],
+    "priceExVat": 12.99
+  },
+  {
+    "id": "dms-stone-vinyl",
+    "brand": "DMS Vinyl",
+    "rangeName": "Stone Effect",
+    "group": "Carpet & Vinyl (Sheet)",
+    "format": "sheet",
+    "rollWidths": [2, 3, 4],
+    "priceExVat": 15.5
+  },
+  {
+    "id": "dms-oak-laminate",
+    "brand": "DMS",
+    "rangeName": "Oak Laminate",
+    "group": "Wood & Laminate (Pack)",
+    "format": "pack",
+    "packSize": 2.1,
+    "priceExVat": 24.5
+  }
+]
