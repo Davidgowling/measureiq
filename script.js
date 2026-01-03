@@ -142,8 +142,10 @@ function setAuthUI() {
     const logoutBtn = document.getElementById("logoutBtn");
     const openBtn = document.getElementById("openAuthBtn");
 
-    if (isSignedIn() && authUser?.email) {
-        status.textContent = `Signed in as ${authUser.email}`;
+    const signedIn = !!authUser;
+
+    if (signedIn) {
+        status.textContent = `Signed in as ${authUser.email || "user"}`;
         logoutBtn.style.display = "inline-block";
         openBtn.style.display = "none";
     } else {
