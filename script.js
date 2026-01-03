@@ -139,18 +139,15 @@ async function apiFetch(path, options = {}) {
 
 function setAuthUI() {
     const status = document.getElementById("authStatus");
-    const badge = document.getElementById("syncBadge");
     const logoutBtn = document.getElementById("logoutBtn");
     const openBtn = document.getElementById("openAuthBtn");
 
     if (isSignedIn() && authUser?.email) {
         status.textContent = `Signed in as ${authUser.email}`;
-        badge.textContent = "Cloud sync";
         logoutBtn.style.display = "inline-block";
         openBtn.style.display = "none";
     } else {
         status.textContent = "Not signed in";
-        badge.textContent = "Sign in required";
         logoutBtn.style.display = "none";
         openBtn.style.display = "inline-block";
     }
