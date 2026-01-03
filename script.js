@@ -156,8 +156,12 @@ function setAuthUI() {
 }
 
 function openAuthModal() {
+    // 🔑 KEY FIX: hide lock overlay when auth modal opens
+    lockApp(false);
+
     document.getElementById("authModal").style.display = "flex";
 }
+
 
 function closeAuthModal() {
     document.getElementById("authModal").style.display = "none";
