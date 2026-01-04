@@ -795,7 +795,7 @@ function loadRoom(id) {
 function buildEffectiveAccessoryDefs(system, user) {
     const map = new Map();
 
-    // 1. Add system defaults first
+    // 1. Add all system accessories first
     (system || []).forEach(acc => {
         map.set(acc.key, {
             id: acc.key,
@@ -806,16 +806,19 @@ function buildEffectiveAccessoryDefs(system, user) {
         });
     });
 
-    // 2. Overlay user accessories (override or custom)
+    // 2. Overlay user accessories
     (user || []).forEach(acc => {
+        const isSystem = map.has(acc.id);
+
         map.set(acc.id, {
             ...acc,
-            source: "custom"
+            source: isSystem ? "system" : "custom"
         });
     });
 
     return Array.from(map.values());
 }
+
 
 
 async function loadAccessoryDefinitions() {
@@ -955,9 +958,15 @@ function renderAccessoriesPricingPanel() {
 
     const rowsHtml = accessoriesDefs.map(def => `
         <tr data-id="${def.id}">
-            <td>
-                <input type="text" id="accDefName_${def.id}" value="${escapeHtml(def.name)}">
-            </td>
+          <td>
+    <div class="acc-name-wrap">
+        <input type="text" id="accDefName_${def.id}" value="${escapeHtml(def.name)}">
+        <span class="acc-badge ${def.source === "custom" ? "acc-custom" : "acc-system"}">
+    ${def.source === "custom" ? "Custom" : "System"}
+</span>
+    </div>
+</td>
+
             <td>
                 <select id="accDefUnit_${def.id}">
                     <option value="sqm"${def.unit === "sqm" ? " selected" : ""}>per m²</option>
