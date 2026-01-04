@@ -792,39 +792,57 @@ function loadRoom(id) {
 //------------------------------------------------------
 // ACCESSORY DEFINITIONS (GLOBAL LIST)
 //------------------------------------------------------
+function buildEffectiveAccessoryDefs(system, user) {
+    const map = new Map();
+
+    // 1. Add system defaults first
+    (system || []).forEach(acc => {
+        map.set(acc.key, {
+            id: acc.key,
+            name: acc.name,
+            unit: acc.unit,
+            price: acc.defaultPrice,
+            source: "system"
+        });
+    });
+
+    // 2. Overlay user accessories (override or custom)
+    (user || []).forEach(acc => {
+        map.set(acc.id, {
+            ...acc,
+            source: "custom"
+        });
+    });
+
+    return Array.from(map.values());
+}
+
+
 async function loadAccessoryDefinitions() {
-    // Cloud-only: accessory definitions (pricing list) are stored inside user_data.data.accessoryDefinitions
     let cloud = null;
 
     if (isSignedIn()) {
         try {
             cloud = await apiFetch("/api/load", { method: "GET" });
-        } catch (e) {
+        } catch {
             cloud = null;
         }
     }
 
-    // Backwards-compatible reads (in case you already saved under another key earlier)
     const saved =
         cloud && Array.isArray(cloud.accessoryDefinitions) ? cloud.accessoryDefinitions :
         cloud && Array.isArray(cloud.accessoriesDefs) ? cloud.accessoriesDefs :
-        null;
+        [];
 
-    if (saved && saved.length) {
-        accessoriesDefs = saved;
-    } else {
-        accessoriesDefs = [
-            { id: "underlay", name: "Underlay", unit: "sqm", price: 0 },
-            { id: "gripper", name: "Gripper", unit: "lm", price: 0 },
-            { id: "adhesive", name: "Adhesive", unit: "sqm", price: 0 },
-            { id: "fitting", name: "Fitting / Labour", unit: "sqm", price: 0 },
-            { id: "doorbars", name: "Door bars", unit: "item", price: 0 }
-        ];
-    }
+    accessoriesDefs = buildEffectiveAccessoryDefs(
+        SYSTEM_ACCESSORIES,
+        saved
+    );
 
     renderAccessoriesPricingPanel();
     renderRoomAccessoriesPanel(getActiveRoomAccessories());
 }
+
 
 async function saveAccessoryDefinitions() {
     const container = document.getElementById("accessoriesPricingList");
