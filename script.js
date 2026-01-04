@@ -4,6 +4,8 @@
 let products = [];
 let rooms = [];
 let activeRoomId = null;
+let SYSTEM_ACCESSORIES = [];
+
 
 const CUSTOMER_KEY = "measureiq_customers_v1";
 const ACCESSORY_DEFS_KEY = "measureiq_accessories_definitions_v1";
@@ -28,13 +30,21 @@ function unlockApp() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    // Load products JSON
+    // Load products
     fetch("products.json")
         .then(res => res.json())
         .then(data => {
             products = data;
         })
         .catch(err => console.error("Error loading products.json", err));
+
+    // Load system accessories
+    fetch("data/accessories.json")
+        .then(res => res.json())
+        .then(data => {
+            SYSTEM_ACCESSORIES = data.systemAccessories || [];
+        })
+        .catch(err => console.error("Error loading data/accessories.json", err));
 
     // Buttons & events
     document.getElementById("addRoomBtn").addEventListener("click", addRoom);
