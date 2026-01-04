@@ -795,13 +795,14 @@ function loadRoom(id) {
 function buildEffectiveAccessoryDefs(system, user) {
     const map = new Map();
 
-    // 1. Add all system accessories first
+    // 1. Add all system accessories first (authoritative)
     (system || []).forEach(acc => {
         map.set(acc.key, {
             id: acc.key,
             name: acc.name,
             unit: acc.unit,
             price: acc.defaultPrice,
+            category: acc.category || "Other",
             source: "system"
         });
     });
@@ -810,14 +811,28 @@ function buildEffectiveAccessoryDefs(system, user) {
     (user || []).forEach(acc => {
         const isSystem = map.has(acc.id);
 
-        map.set(acc.id, {
-            ...acc,
-            source: isSystem ? "system" : "custom"
-        });
+        if (isSystem) {
+            // Preserve system category, allow price/unit overrides only
+            const base = map.get(acc.id);
+            map.set(acc.id, {
+                ...base,
+                ...acc,
+                category: base.category,
+                source: "system"
+            });
+        } else {
+            // True custom accessory
+            map.set(acc.id, {
+                ...acc,
+                category: acc.category || "Other",
+                source: "custom"
+            });
+        }
     });
 
     return Array.from(map.values());
 }
+
 
 
 
@@ -968,37 +983,55 @@ function renderAccessoriesPricingPanel() {
         return;
     }
 
-    const rowsHtml = accessoriesDefs.map(def => `
-        <tr data-id="${def.id}">
-          <td>
-            <div class="acc-name-wrap">
-                <input type="text" id="accDefName_${def.id}" value="${escapeHtml(def.name)}">
-                <span class="acc-badge ${def.source === "custom" ? "acc-custom" : "acc-system"}">
-                    ${def.source === "custom" ? "Custom" : "System"}
-                </span>
-            </div>
-            </td>
+    const grouped = accessoriesDefs.reduce((acc, def) => {
+        const cat = def.category || "Other";
+        if (!acc[cat]) acc[cat] = [];
+        acc[cat].push(def);
+        return acc;
+    }, {});
 
-            <td>
-                <select id="accDefUnit_${def.id}">
-                    <option value="sqm"${def.unit === "sqm" ? " selected" : ""}>per m²</option>
-                    <option value="lm"${def.unit === "lm" ? " selected" : ""}>per metre</option>
-                    <option value="item"${def.unit === "item" ? " selected" : ""}>per item</option>
-                </select>
-            </td>
-            <td>
-                <input type="number" id="accDefPrice_${def.id}" step="0.01" min="0" value="${def.price}">
-            </td>
-            <td>
-                ${
-                    def.source === "custom"
-                        ? `<button class="btn danger small" data-del-id="${def.id}">Delete</button>`
-                    : `<span class="muted small">System</span>`
-                }
-            </td>
+    const rowsHtml = Object.entries(grouped).map(([category, defs]) => {
+        const headerRow = `
+            <tr class="category-row">
+                <td colspan="4"><strong>${category}</strong></td>
+            </tr>
+        `;
 
-        </tr>
-    `).join("");
+        const rows = defs.map(def => `
+            <tr data-id="${def.id}">
+                <td>
+                    <div class="acc-name-wrap">
+                        <input type="text" id="accDefName_${def.id}" value="${escapeHtml(def.name)}">
+                        <span class="acc-badge ${def.source === "custom" ? "acc-custom" : "acc-system"}">
+                            ${def.source === "custom" ? "Custom" : "System"}
+                        </span>
+                    </div>
+                </td>
+
+                <td>
+                    <select id="accDefUnit_${def.id}">
+                        <option value="sqm"${def.unit === "sqm" ? " selected" : ""}>per m²</option>
+                        <option value="lm"${def.unit === "lm" ? " selected" : ""}>per metre</option>
+                        <option value="item"${def.unit === "item" ? " selected" : ""}>per item</option>
+                    </select>
+                </td>
+
+                <td>
+                    <input type="number" id="accDefPrice_${def.id}" step="0.01" min="0" value="${def.price}">
+                </td>
+
+                <td>
+                    ${
+                        def.source === "custom"
+                            ? `<button class="btn danger small" data-del-id="${def.id}">Delete</button>`
+                            : `<span class="muted small">System</span>`
+                    }
+                </td>
+            </tr>
+        `).join("");
+
+        return headerRow + rows;
+    }).join("");
 
     container.innerHTML = `
         <table class="summary-table accessories-table">
@@ -1018,11 +1051,11 @@ function renderAccessoriesPricingPanel() {
 
     container.querySelectorAll("[data-del-id]").forEach(btn => {
         btn.addEventListener("click", () => {
-            const id = btn.getAttribute("data-del-id");
-            deleteAccessoryDefinition(id);
+            deleteAccessoryDefinition(btn.dataset.delId);
         });
     });
 }
+
 
 function getActiveRoomAccessories() {
     const room = rooms.find(r => r.id === activeRoomId);
