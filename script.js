@@ -916,7 +916,13 @@ function addAccessoryDefinition() {
 
     const id = "acc_" + Date.now();
 
-    accessoriesDefs.push({ id, name, unit, price });
+     accessoriesDefs.push({
+        id,
+        name,
+        unit,
+        price,
+        source: "custom"
+    });
 
     // Persist immediately (cloud-only)
     persistAccessoryDefinitionsSilently();
@@ -936,6 +942,11 @@ function deleteAccessoryDefinition(id) {
         return;
     }
 
+    const def = accessoriesDefs.find(a => a.id === id);
+    if (def?.source === "system") {
+        return;
+    }
+
     accessoriesDefs = accessoriesDefs.filter(a => a.id !== id);
 
     // Persist immediately (cloud-only)
@@ -946,6 +957,7 @@ function deleteAccessoryDefinition(id) {
     calculateRoom(true);
     renderQuote();
 }
+
 
 function renderAccessoriesPricingPanel() {
     const container = document.getElementById("accessoriesPricingList");
@@ -959,13 +971,13 @@ function renderAccessoriesPricingPanel() {
     const rowsHtml = accessoriesDefs.map(def => `
         <tr data-id="${def.id}">
           <td>
-    <div class="acc-name-wrap">
-        <input type="text" id="accDefName_${def.id}" value="${escapeHtml(def.name)}">
-        <span class="acc-badge ${def.source === "custom" ? "acc-custom" : "acc-system"}">
-    ${def.source === "custom" ? "Custom" : "System"}
-</span>
-    </div>
-</td>
+            <div class="acc-name-wrap">
+                <input type="text" id="accDefName_${def.id}" value="${escapeHtml(def.name)}">
+                <span class="acc-badge ${def.source === "custom" ? "acc-custom" : "acc-system"}">
+                    ${def.source === "custom" ? "Custom" : "System"}
+                </span>
+            </div>
+            </td>
 
             <td>
                 <select id="accDefUnit_${def.id}">
@@ -978,8 +990,13 @@ function renderAccessoriesPricingPanel() {
                 <input type="number" id="accDefPrice_${def.id}" step="0.01" min="0" value="${def.price}">
             </td>
             <td>
-                <button class="btn danger small" data-del-id="${def.id}">Delete</button>
+                ${
+                    def.source === "custom"
+                        ? `<button class="btn danger small" data-del-id="${def.id}">Delete</button>`
+                    : `<span class="muted small">System</span>`
+                }
             </td>
+
         </tr>
     `).join("");
 
