@@ -2,38 +2,33 @@
   "version": 1,
   "systemAccessories": [
     {
-      "key": "underlay",
+      "id": "underlay",
       "name": "Underlay",
       "unit": "sqm",
-      "defaultPrice": 0,
       "category": "Preparation"
     },
     {
-      "key": "gripper",
+      "id": "gripper",
       "name": "Gripper",
       "unit": "lm",
-      "defaultPrice": 0,
       "category": "Preparation"
     },
     {
-      "key": "adhesive",
+      "id": "adhesive",
       "name": "Adhesive",
       "unit": "sqm",
-      "defaultPrice": 0,
       "category": "Installation"
     },
     {
-      "key": "doorbars",
+      "id": "doorbars",
       "name": "Door bars",
       "unit": "item",
-      "defaultPrice": 0,
       "category": "Trims & Finishing"
     },
     {
-      "key": "fitting",
+      "id": "fitting",
       "name": "Fitting / Labour",
       "unit": "sqm",
-      "defaultPrice": 0,
       "category": "Labour"
     }
   ]

@@ -42,7 +42,12 @@ document.addEventListener("DOMContentLoaded", () => {
     fetch("data/accessories.json")
         .then(res => res.json())
         .then(data => {
-            SYSTEM_ACCESSORIES = data.systemAccessories || [];
+            SYSTEM_ACCESSORIES = (data.systemAccessories || []).map(acc => ({
+                id: acc.id,
+                name: acc.name,
+                unit: acc.unit,
+                category: acc.category || "Other"
+            }));   
         })
         .catch(err => console.error("Error loading data/accessories.json", err));
 
@@ -72,7 +77,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Accessories pricing
     document.getElementById("saveAccessoriesBtn").addEventListener("click", saveAccessoryDefinitions);
-    document.getElementById("addAccessoryBtn").addEventListener("click", addAccessoryDefinition);
 
     // Range selector modal
     document.getElementById("selectRangeBtn").addEventListener("click", openRangeModal);
@@ -792,49 +796,15 @@ function loadRoom(id) {
 //------------------------------------------------------
 // ACCESSORY DEFINITIONS (GLOBAL LIST)
 //------------------------------------------------------
-function buildEffectiveAccessoryDefs(system, user) {
-    const map = new Map();
-
-    // 1. Add all system accessories first (authoritative)
-    (system || []).forEach(acc => {
-        map.set(acc.key, {
-            id: acc.key,
-            name: acc.name,
-            unit: acc.unit,
-            price: acc.defaultPrice,
-            category: acc.category || "Other",
-            source: "system"
-        });
-    });
-
-    // 2. Overlay user accessories
-    (user || []).forEach(acc => {
-        const isSystem = map.has(acc.id);
-
-        if (isSystem) {
-            // Preserve system category, allow price/unit overrides only
-            const base = map.get(acc.id);
-            map.set(acc.id, {
-                ...base,
-                ...acc,
-                category: base.category,
-                source: "system"
-            });
-        } else {
-            // True custom accessory
-            map.set(acc.id, {
-                ...acc,
-                category: acc.category || "Other",
-                source: "custom"
-            });
-        }
-    });
-
-    return Array.from(map.values());
+function buildAccessories(system, userPrices = {}) {
+    return system.map(acc => ({
+        id: acc.id,
+        name: acc.name,
+        unit: acc.unit,
+        category: acc.category || "Other",
+        price: Number(userPrices[acc.id]) || 0
+    }));
 }
-
-
-
 
 async function loadAccessoryDefinitions() {
     let cloud = null;
@@ -847,38 +817,28 @@ async function loadAccessoryDefinitions() {
         }
     }
 
-    const saved =
-        cloud && Array.isArray(cloud.accessoryDefinitions) ? cloud.accessoryDefinitions :
-        cloud && Array.isArray(cloud.accessoriesDefs) ? cloud.accessoriesDefs :
-        [];
+    const userPrices =
+        cloud && cloud.accessoryPrices && typeof cloud.accessoryPrices === "object"
+            ? cloud.accessoryPrices
+            : {};
 
-    accessoriesDefs = buildEffectiveAccessoryDefs(
-        SYSTEM_ACCESSORIES,
-        saved
-    );
+    accessoriesDefs = buildAccessories(SYSTEM_ACCESSORIES, userPrices);
 
     renderAccessoriesPricingPanel();
     renderRoomAccessoriesPanel(getActiveRoomAccessories());
 }
 
-
 async function saveAccessoryDefinitions() {
     const container = document.getElementById("accessoriesPricingList");
     if (!container) return;
 
-    const rows = container.querySelectorAll("tbody tr");
-    const updated = [];
+    const prices = {};
 
-    rows.forEach(row => {
+    container.querySelectorAll("tbody tr[data-id]").forEach(row => {
         const id = row.getAttribute("data-id");
-        const name = document.getElementById(`accDefName_${id}`).value.trim() || "Accessory";
-        const unit = document.getElementById(`accDefUnit_${id}`).value;
-        const price = parseFloat(document.getElementById(`accDefPrice_${id}`).value) || 0;
-
-        updated.push({ id, name, unit, price });
+        const priceInput = document.getElementById(`accDefPrice_${id}`);
+        prices[id] = parseFloat(priceInput.value) || 0;
     });
-
-    accessoriesDefs = updated;
 
     if (!isSignedIn()) {
         requireAuth();
@@ -886,7 +846,7 @@ async function saveAccessoryDefinitions() {
     }
 
     const cloud = await apiFetch("/api/load", { method: "GET" });
-    cloud.accessoryDefinitions = accessoriesDefs;
+    cloud.accessoryPrices = prices;
 
     await apiFetch("/api/save", {
         method: "POST",
@@ -895,94 +855,24 @@ async function saveAccessoryDefinitions() {
 
     const msg = document.getElementById("accessoriesSavedMsg");
     msg.textContent = "Saved";
-    setTimeout(() => { msg.textContent = ""; }, 1500);
+    setTimeout(() => (msg.textContent = ""), 1500);
 
+    accessoriesDefs = buildAccessories(SYSTEM_ACCESSORIES, prices);
     renderRoomAccessoriesPanel(getActiveRoomAccessories());
     calculateRoom(true);
     renderQuote();
 }
-
-async function persistAccessoryDefinitionsSilently() {
-    if (!isSignedIn()) return;
-    try {
-        const cloud = await apiFetch("/api/load", { method: "GET" });
-        cloud.accessoryDefinitions = accessoriesDefs;
-        await apiFetch("/api/save", { method: "POST", body: JSON.stringify(cloud) });
-    } catch {
-        // non-fatal
-    }
-}
-
-
-function addAccessoryDefinition() {
-    const name = document.getElementById("newAccName").value.trim();
-    const unit = document.getElementById("newAccUnit").value;
-    const price = parseFloat(document.getElementById("newAccPrice").value) || 0;
-
-    if (!name) {
-        alert("Enter an accessory name.");
-        return;
-    }
-
-    if (!isSignedIn()) {
-        requireAuth();
-        return;
-    }
-
-    const id = "acc_" + Date.now();
-
-     accessoriesDefs.push({
-        id,
-        name,
-        unit,
-        price,
-        source: "custom"
-    });
-
-    // Persist immediately (cloud-only)
-    persistAccessoryDefinitionsSilently();
-
-    document.getElementById("newAccName").value = "";
-    document.getElementById("newAccPrice").value = "";
-
-    renderAccessoriesPricingPanel();
-    renderRoomAccessoriesPanel(getActiveRoomAccessories());
-    calculateRoom(true);
-    renderQuote();
-}
-
-function deleteAccessoryDefinition(id) {
-    if (!isSignedIn()) {
-        requireAuth();
-        return;
-    }
-
-    const def = accessoriesDefs.find(a => a.id === id);
-    if (def?.source === "system") {
-        return;
-    }
-
-    accessoriesDefs = accessoriesDefs.filter(a => a.id !== id);
-
-    // Persist immediately (cloud-only)
-    persistAccessoryDefinitionsSilently();
-
-    renderAccessoriesPricingPanel();
-    renderRoomAccessoriesPanel(getActiveRoomAccessories());
-    calculateRoom(true);
-    renderQuote();
-}
-
 
 function renderAccessoriesPricingPanel() {
     const container = document.getElementById("accessoriesPricingList");
     if (!container) return;
 
     if (!accessoriesDefs.length) {
-        container.innerHTML = `<p class="muted">No accessories yet. Add one below.</p>`;
+        container.innerHTML = `<p class="muted">No accessories configured.</p>`;
         return;
     }
 
+    // Group by category
     const grouped = accessoriesDefs.reduce((acc, def) => {
         const cat = def.category || "Other";
         if (!acc[cat]) acc[cat] = [];
@@ -990,42 +880,32 @@ function renderAccessoriesPricingPanel() {
         return acc;
     }, {});
 
-    const rowsHtml = Object.entries(grouped).map(([category, defs]) => {
+    // Stable category order (alphabetical, but "Other" last)
+    const orderedCategories = Object.keys(grouped).sort((a, b) => {
+        if (a === "Other") return 1;
+        if (b === "Other") return -1;
+        return a.localeCompare(b);
+    });
+
+    const rowsHtml = orderedCategories.map(category => {
+        const defs = grouped[category];
+
         const headerRow = `
             <tr class="category-row">
-                <td colspan="4"><strong>${category}</strong></td>
+                <td colspan="3"><strong>${escapeHtml(category)}</strong></td>
             </tr>
         `;
 
         const rows = defs.map(def => `
             <tr data-id="${def.id}">
+                <td>${escapeHtml(def.name)}</td>
+                <td>${unitLabel(def.unit)}</td>
                 <td>
-                    <div class="acc-name-wrap">
-                        <input type="text" id="accDefName_${def.id}" value="${escapeHtml(def.name)}">
-                        <span class="acc-badge ${def.source === "custom" ? "acc-custom" : "acc-system"}">
-                            ${def.source === "custom" ? "Custom" : "System"}
-                        </span>
-                    </div>
-                </td>
-
-                <td>
-                    <select id="accDefUnit_${def.id}">
-                        <option value="sqm"${def.unit === "sqm" ? " selected" : ""}>per m²</option>
-                        <option value="lm"${def.unit === "lm" ? " selected" : ""}>per metre</option>
-                        <option value="item"${def.unit === "item" ? " selected" : ""}>per item</option>
-                    </select>
-                </td>
-
-                <td>
-                    <input type="number" id="accDefPrice_${def.id}" step="0.01" min="0" value="${def.price}">
-                </td>
-
-                <td>
-                    ${
-                        def.source === "custom"
-                            ? `<button class="btn danger small" data-del-id="${def.id}">Delete</button>`
-                            : `<span class="muted small">System</span>`
-                    }
+                    <input type="number"
+                           id="accDefPrice_${def.id}"
+                           step="0.01"
+                           min="0"
+                           value="${Number(def.price) || 0}">
                 </td>
             </tr>
         `).join("");
@@ -1040,7 +920,6 @@ function renderAccessoriesPricingPanel() {
                     <th>Name</th>
                     <th>Unit</th>
                     <th>Price (£ ex VAT)</th>
-                    <th></th>
                 </tr>
             </thead>
             <tbody>
@@ -1048,12 +927,6 @@ function renderAccessoriesPricingPanel() {
             </tbody>
         </table>
     `;
-
-    container.querySelectorAll("[data-del-id]").forEach(btn => {
-        btn.addEventListener("click", () => {
-            deleteAccessoryDefinition(btn.dataset.delId);
-        });
-    });
 }
 
 

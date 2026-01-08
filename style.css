@@ -411,6 +411,13 @@ textarea {
     margin-top: 4px;
 }
 
+/* Accessories table actions column */
+.accessories-table td.actions {
+    width: 80px;
+    text-align: right;
+}
+
+
 /* ---------- BUSINESS PROFILE ---------- */
 
 .business-panel {
