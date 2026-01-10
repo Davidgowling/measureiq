@@ -132,40 +132,12 @@
                         </div>
                     </div>
 
-                    <!-- PRODUCT RANGE -->
-                    <div class="product-range-row">
-                        <div class="product-range-info">
-                            <label>Selected Range</label>
-                            <div id="selectedRangeDisplay" class="range-display">
-                                None selected
-                            </div>
-                        </div>
-                        <div class="product-range-action">
-                            <button id="selectRangeBtn" class="btn secondary full-width">Select Range</button>
-                        </div>
-                    </div>
-
                     <!-- ROOM DIMENSIONS -->
                     <label for="length">Room Length (m)</label>
                     <input type="number" id="length" step="0.01" min="0">
 
                     <label for="widthInput" id="widthLabel">Room Width - Actual (m)</label>
                     <input type="number" id="widthInput" step="0.01" min="0">
-
-                    <!-- SHEET ROLL WIDTH DROPDOWN (OPTIONAL) -->
-                    <label for="widthDropdown" id="widthDropdownLabel" style="display:none;">Roll Width (m)</label>
-                    <select id="widthDropdown" style="display:none;"></select>
-
-                    <!-- WASTAGE -->
-                    <label for="wastage">Wastage (%)</label>
-                    <input type="number" id="wastage" value="10" min="0" max="100">
-
-                    <!-- AUTO-FILLED PRODUCT FIELDS -->
-                    <label for="packSize">Pack Size (m² per pack)</label>
-                    <input type="number" id="packSize" readonly>
-
-                    <label for="price">Trade Price (£ ex VAT)</label>
-                    <input type="number" id="price" readonly>
 
                     <!-- ACCESSORIES SECTION (DYNAMIC) -->
                     <div class="accessories-section">
@@ -216,14 +188,10 @@
                 <h2>Customer Quote</h2>
 
                 <div class="quote-controls no-print">
-                    <div>
-                        <label for="quoteMarkup">Material markup (%)</label>
-                        <input type="number" id="quoteMarkup" min="0" step="1" />
-                    </div>
                     <div class="quote-toggle">
                         <label>
                             <input type="checkbox" id="quoteShowAccessories">
-                            Show accessories on customer quote
+                            Show line items on customer quote
                         </label>
                     </div>
                 </div>
@@ -288,10 +256,6 @@
                         <label for="bpVatNumber">VAT Number (optional)</label>
                         <input type="text" id="bpVatNumber">
                     </div>
-                    <div>
-                        <label for="bpDefaultMarkup">Default material markup (%)</label>
-                        <input type="number" id="bpDefaultMarkup" min="0" step="1">
-                    </div>
                     <div class="bp-checkbox">
                         <label>
                             <input type="checkbox" id="bpShowAccessories">
@@ -310,20 +274,6 @@
             </div>
         </div>
 
-    </div>
-</div>
-
-<!-- RANGE SELECT MODAL -->
-<div id="rangeModal" class="modal no-print">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3>Select Product Range</h3>
-            <button id="closeRangeModalBtn" class="modal-close">&times;</button>
-        </div>
-        <div class="modal-body">
-            <p class="muted" id="rangeModalInfo">Choose a product range.</p>
-            <div id="rangeList"></div>
-        </div>
     </div>
 </div>
 
