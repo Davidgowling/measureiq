@@ -292,7 +292,7 @@ async function initCloudOnly() {
         await hydrateAuthUser();
     } catch {}
     if (!isSignedIn()) {
-        lockApp(true);
+        lockApp(false);
         openAuthModal();
         // Do not load any data until signed in
         return;
@@ -582,7 +582,7 @@ function updateRoomList() {
     container.appendChild(addCard);
 
     // Keep active room visible
-    const activeCard = container.querySelector(".room-card.active");const activeCard = container.querySelector(".room-card.active");
+    const activeCard = container.querySelector(".room-card.active");
     if (activeCard) {
         const containerRect = container.getBoundingClientRect();
         const cardRect = activeCard.getBoundingClientRect();
@@ -975,12 +975,17 @@ function calculateRoom(auto = false) {
 
     // Update sticky footer
     const footerRooms = document.getElementById("footerRoomCount");
-    const footerTotal = document.getElementById("footerTotal");
+const footerTotal = document.getElementById("footerTotal");
 
-    if (footerRooms && footerTotal) {
-        footerRooms.textContent = `${rooms.length} room${rooms.length === 1 ? "" : "s"}`;
-        footerTotal.textContent = `£${grandTotal.toFixed(2)} ex VAT`;
+if (footerRooms && footerTotal) {
+    const total = rooms.reduce((sum, r) => {
+        return sum + (r.data?.lineTotal || 0);
+    }, 0);
+
+    footerRooms.textContent = `${rooms.length} room${rooms.length === 1 ? "" : "s"}`;
+    footerTotal.textContent = `£${total.toFixed(2)} ex VAT`;
 }
+
 
 }
 
