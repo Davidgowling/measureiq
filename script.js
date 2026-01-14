@@ -58,7 +58,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // Internal summary print
-    document.getElementById("printBtn").addEventListener("click", () => window.print());
+    document.getElementById("printBtn")?.addEventListener("click", () => window.print());
 
     // Items & pricing
     document.getElementById("saveAccessoriesBtn").addEventListener("click", saveAccessoryDefinitions);
