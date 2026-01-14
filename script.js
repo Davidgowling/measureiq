@@ -60,7 +60,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Internal summary print
     document.getElementById("printBtn")?.addEventListener("click", () => window.print());
 
-    // Items & pricing
+    // Items & pricingx
     document.getElementById("saveAccessoriesBtn").addEventListener("click", saveAccessoryDefinitions);
 
     // Business profile
@@ -555,7 +555,6 @@ function updateRoomList() {
 
         card.innerHTML = `
             <h4>${escapeHtml(room.name)}</h4>
-
             <div class="mini-totals ${hasData ? "" : "muted"}">
                 <span>${area}</span>
                 <span>${total}</span>
@@ -581,11 +580,11 @@ function updateRoomList() {
     addCard.addEventListener("click", addRoom);
     container.appendChild(addCard);
 
-    // Keep active room visible
-    const activeCard = container.querySelector(".room-card.active");
-    if (activeCard) {
+    // Keep active room visible (snap to centre)
+    const activeRoomCard = container.querySelector(".room-card.active");
+    if (activeRoomCard) {
         const containerRect = container.getBoundingClientRect();
-        const cardRect = activeCard.getBoundingClientRect();
+        const cardRect = activeRoomCard.getBoundingClientRect();
 
         const currentScroll = container.scrollLeft;
 
