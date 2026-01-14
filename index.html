@@ -100,7 +100,7 @@
         <h2>Rooms</h2>
         <button id="addRoomBtn" class="btn secondary full-width">+ Add Room</button>
 
-        <ul id="roomList" class="room-list"></ul>
+        <div id="roomCarousel" class="room-carousel"></div>
     </div>
 
     <!-- RIGHT COLUMN: TABS + PANELS -->
@@ -110,7 +110,6 @@
         <div class="tabs no-print">
             <button class="tab-btn active" data-tab="calculatorSection">Room Calculator</button>
             <button class="tab-btn" data-tab="accessoriesSection">Accessories Pricing</button>
-            <button class="tab-btn" data-tab="summarySection">Project Summary</button>
             <button class="tab-btn" data-tab="quoteSection">Quote Builder</button>
             <button class="tab-btn" data-tab="businessProfileSection">Business Profile</button>
         </div>
@@ -168,17 +167,6 @@
 
                 <button id="saveAccessoriesBtn" class="btn primary">Save All Accessories</button>
                 <span id="accessoriesSavedMsg" class="small-note"></span>
-            </div>
-        </div>
-
-        <!-- TAB: PROJECT SUMMARY (INTERNAL) -->
-        <div id="summarySection" class="tab-panel" style="display:none;">
-            <div id="summary" class="summary">
-                <h2>Project Summary (Internal)</h2>
-                <div id="summaryContent" class="summary-content">
-                    <p class="muted">No rooms calculated yet.</p>
-                </div>
-                <button id="printBtn" class="btn secondary no-print">Print / PDF (Internal View)</button>
             </div>
         </div>
 
@@ -275,6 +263,19 @@
         </div>
 
     </div>
+</div>
+
+<div id="stickyFooter" class="sticky-footer no-print">
+  <div class="footer-left">
+    <span id="footerRoomCount">0 rooms</span>
+  </div>
+  <div class="footer-center">
+    <strong id="footerTotal">£0.00 ex VAT</strong>
+  </div>
+  <div class="footer-right">
+    <button class="btn secondary" onclick="renderQuote()">Quote</button>
+    <button class="btn primary" onclick="saveCustomer()">Save</button>
+  </div>
 </div>
 
 <script src="script.js"></script>

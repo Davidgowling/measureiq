@@ -323,12 +323,12 @@ async function syncToCloud() {
 function setupTabs() {
     const buttons = document.querySelectorAll(".tab-btn");
     const panels = {
-        calculatorSection: document.getElementById("calculatorSection"),
-        accessoriesSection: document.getElementById("accessoriesSection"),
-        summarySection: document.getElementById("summarySection"),
-        quoteSection: document.getElementById("quoteSection"),
-        businessProfileSection: document.getElementById("businessProfileSection")
-    };
+    calculatorSection: document.getElementById("calculatorSection"),
+    accessoriesSection: document.getElementById("accessoriesSection"),
+    quoteSection: document.getElementById("quoteSection"),
+    businessProfileSection: document.getElementById("businessProfileSection")
+};
+
 
     buttons.forEach(btn => {
         btn.addEventListener("click", () => {
@@ -520,27 +520,85 @@ function deleteRoom() {
 }
 
 function updateRoomList() {
-    const list = document.getElementById("roomList");
-    list.innerHTML = "";
+    const container = document.getElementById("roomCarousel");
+    if (!container) return;
+
+    container.innerHTML = "";
+
+    // No rooms yet → show add card only
+    if (!rooms.length) {
+        const addCard = document.createElement("div");
+        addCard.className = "room-card add-room-card";
+        addCard.innerHTML = `
+            <h4>➕ Add Room</h4>
+            <div class="muted">Tap to create your first room</div>
+        `;
+        addCard.addEventListener("click", addRoom);
+        container.appendChild(addCard);
+        return;
+    }
 
     rooms.forEach(room => {
-        const li = document.createElement("li");
-        const btn = document.createElement("button");
+        const card = document.createElement("div");
+        card.className = "room-card";
+        if (room.id === activeRoomId) card.classList.add("active");
 
-        btn.className = "btn secondary";
-        btn.textContent = room.name;
+        const hasData = room.data && room.data.roomArea && room.data.lineTotal;
 
-        if (room.id === activeRoomId) btn.style.fontWeight = "700";
+        const area = hasData
+            ? `${room.data.roomArea.toFixed(2)} m²`
+            : "—";
 
-        btn.addEventListener("click", () => {
+        const total = hasData
+            ? `£${room.data.lineTotal.toFixed(2)}`
+            : "Not calculated";
+
+        card.innerHTML = `
+            <h4>${escapeHtml(room.name)}</h4>
+
+            <div class="mini-totals ${hasData ? "" : "muted"}">
+                <span>${area}</span>
+                <span>${total}</span>
+            </div>
+        `;
+
+        card.addEventListener("click", () => {
             activeRoomId = room.id;
             updateRoomList();
             loadRoom(room.id);
         });
 
-        li.appendChild(btn);
-        list.appendChild(li);
+        container.appendChild(card);
     });
+
+    // ➕ Add room card (always last)
+    const addCard = document.createElement("div");
+    addCard.className = "room-card add-room-card";
+    addCard.innerHTML = `
+        <h4>➕ Add Room</h4>
+        <div class="muted">Add another room</div>
+    `;
+    addCard.addEventListener("click", addRoom);
+    container.appendChild(addCard);
+
+    // Keep active room visible
+    const activeCard = container.querySelector(".room-card.active");const activeCard = container.querySelector(".room-card.active");
+    if (activeCard) {
+        const containerRect = container.getBoundingClientRect();
+        const cardRect = activeCard.getBoundingClientRect();
+
+        const currentScroll = container.scrollLeft;
+
+        const offset =
+            (cardRect.left - containerRect.left)
+            - (containerRect.width / 2)
+            + (cardRect.width / 2);
+
+        container.scrollTo({
+            left: currentScroll + offset,
+            behavior: "smooth"
+        });
+    }
 }
 
 function clearRoomForm() {
@@ -914,6 +972,16 @@ function calculateRoom(auto = false) {
         savedMsg.textContent = "✓ Room saved";
         setTimeout(() => (savedMsg.textContent = ""), 1500);
     }
+
+    // Update sticky footer
+    const footerRooms = document.getElementById("footerRoomCount");
+    const footerTotal = document.getElementById("footerTotal");
+
+    if (footerRooms && footerTotal) {
+        footerRooms.textContent = `${rooms.length} room${rooms.length === 1 ? "" : "s"}`;
+        footerTotal.textContent = `£${grandTotal.toFixed(2)} ex VAT`;
+}
+
 }
 
 //------------------------------------------------------
