@@ -1,284 +1,301 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MeasureIQ</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MeasureIQ</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
 
-<div class="topbar no-print">
+  <div class="topbar no-print">
     <div class="brand">
-        <h1>MeasureIQ</h1>
+      <h1>MeasureIQ</h1>
     </div>
     <div class="auth">
-        <span id="authStatus" class="muted">Not signed in</span>
-        <button id="openAuthBtn" class="btn secondary">Sign in</button>
-        <button id="logoutBtn" class="btn danger" style="display:none;">Logout</button>
+      <span id="authStatus" class="muted">Not signed in</span>
+      <button id="openAuthBtn" class="btn secondary">Sign in</button>
+      <button id="logoutBtn" class="btn danger" style="display:none;">Logout</button>
     </div>
-</div>
+  </div>
 
-<!-- Auth Modal -->
-<div id="authModal" class="modal" style="display:none;">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2>Sign in</h2>
-            <button id="closeAuthModalBtn" class="btn danger">✕</button>
+  <!-- Auth Modal -->
+  <div id="authModal" class="modal" style="display:none;">
+    <div class="modal-content wide">
+      <div class="modal-header">
+        <h2>Sign in</h2>
+        <button id="closeAuthModalBtn" class="btn danger">✕</button>
+      </div>
+
+      <div class="auth-grid">
+        <div class="auth-card">
+          <h3>Login</h3>
+          <label for="loginEmail">Email</label>
+          <input id="loginEmail" type="email" placeholder="you@company.com" />
+          <label for="loginPassword">Password</label>
+          <input id="loginPassword" type="password" placeholder="••••••••" />
+          <button id="loginBtn" class="btn primary full-width">Login</button>
+
+          <button
+            id="forgotPasswordBtn"
+            type="button"
+            class="btn link full-width"
+            style="margin-top:6px;"
+          >
+            Forgot password?
+          </button>
+
+          <div id="loginMsg" class="small-note"></div>
+          <div id="forgotMsg" class="small-note"></div>
         </div>
 
-        <div class="auth-grid">
-            <div class="auth-card">
-                <h3>Login</h3>
-                <label for="loginEmail">Email</label>
-                <input id="loginEmail" type="email" placeholder="you@company.com" />
-                <label for="loginPassword">Password</label>
-                <input id="loginPassword" type="password" placeholder="••••••••" />
-               <button id="loginBtn" class="btn primary full-width">Login</button>
-
-            <button
-                id="forgotPasswordBtn"
-                type="button"
-                class="btn link full-width"
-                style="margin-top:6px;"
-            >
-                Forgot password?
-            </button>
-
-            <div id="loginMsg" class="small-note"></div>
-            <div id="forgotMsg" class="small-note"></div>
-
-         </div>
-
-            <div class="auth-card">
-                <h3>Create account</h3>
-                <label for="registerEmail">Email</label>
-                <input id="registerEmail" type="email" placeholder="you@company.com" />
-                <label for="registerPassword">Password</label>
-                <input id="registerPassword" type="password" placeholder="Minimum 8 characters" />
-                <button id="registerBtn" class="btn secondary full-width">Register</button>
-                <div id="registerMsg" class="small-note"></div>
-            </div>
+        <div class="auth-card">
+          <h3>Create account</h3>
+          <label for="registerEmail">Email</label>
+          <input id="registerEmail" type="email" placeholder="you@company.com" />
+          <label for="registerPassword">Password</label>
+          <input id="registerPassword" type="password" placeholder="Minimum 8 characters" />
+          <button id="registerBtn" class="btn secondary full-width">Register</button>
+          <div id="registerMsg" class="small-note"></div>
         </div>
+      </div>
 
-        <p class="muted" style="margin-top:10px;">
-            Sign in or create an account to use MeasureIQ. Your data is stored securely in the cloud so you can access it on any device.
-        </p>
+      <p class="muted" style="margin-top:10px;">
+        Sign in or create an account to use MeasureIQ. Your data is stored securely in the cloud so you can access it on any device.
+      </p>
     </div>
-</div>
+  </div>
 
-
-<!-- Cloud-only lock overlay -->
-<div id="lockOverlay" class="lock-overlay" style="display:none;">
+  <!-- Cloud-only lock overlay -->
+  <div id="lockOverlay" class="lock-overlay" style="display:none;">
     <div class="lock-card">
-        <h2>Sign in required</h2>
-        <p class="muted">Create an account or sign in to access your customers, rooms, and quotes.</p>
-        <button id="lockSignInBtn" class="btn primary">Sign in</button>
+      <h2>Sign in required</h2>
+      <p class="muted">Create an account or sign in to access your customers, rooms, and quotes.</p>
+      <button id="lockSignInBtn" class="btn primary">Sign in</button>
     </div>
-</div>
+  </div>
 
-<div class="layout">
+  <div class="layout">
 
-    <!-- LEFT COLUMN: CUSTOMER + ROOMS -->
+    <!-- LEFT COLUMN -->
     <div class="project no-print">
-        <h2>Customer Details</h2>
+      <h2>Customer Details</h2>
 
-        <label for="customerName">Customer Name</label>
-        <input type="text" id="customerName" placeholder="Enter customer name">
+      <label for="customerName">Customer Name</label>
+      <input type="text" id="customerName" placeholder="Enter Name Here" />
 
-        <label for="jobRef">Job Reference (optional)</label>
-        <input type="text" id="jobRef" placeholder="Enter job reference">
+      <label for="jobRef">Job Reference</label>
+      <input type="text" id="jobRef" placeholder="Tip: First line of address" />
 
-        <div class="customer-actions">
-            <button id="saveCustomerBtn" class="btn primary">Save Customer</button>
-            <button id="newCustomerBtn" class="btn secondary">New Customer</button>
-        </div>
+      <div class="customer-actions">
+        <button id="saveCustomerBtn" class="btn primary">Save Customer</button>
+        <button id="newCustomerBtn" class="btn secondary">New Customer</button>
+      </div>
 
-        <h3>Saved Customers</h3>
-        <ul id="savedCustomersList" class="saved-list"></ul>
+      <h3>Saved Customers</h3>
+      <ul id="savedCustomersList" class="saved-list"></ul>
 
-        <h2>Rooms</h2>
-        <button id="addRoomBtn" class="btn secondary full-width">+ Add Room</button>
-
-        <div id="roomCarousel" class="room-carousel"></div>
+      <h2>Rooms</h2>
+      <button id="addRoomBtn" class="btn secondary full-width">+ Add Room</button>
+      <div id="roomList" class="room-list-vertical"></div>
     </div>
 
-    <!-- RIGHT COLUMN: TABS + PANELS -->
+    <!-- RIGHT COLUMN -->
     <div class="right-column">
 
-        <!-- TABS -->
-        <div class="tabs no-print">
-            <button class="tab-btn active" data-tab="calculatorSection">Room Calculator</button>
-            <button class="tab-btn" data-tab="accessoriesSection">Accessories Pricing</button>
-            <button class="tab-btn" data-tab="quoteSection">Quote Builder</button>
-            <button class="tab-btn" data-tab="businessProfileSection">Business Profile</button>
-        </div>
+      <div class="tabs no-print">
+        <button class="tab-btn active" data-tab="calculatorSection">Room Calculator</button>
+        <button class="tab-btn" data-tab="accessoriesSection">Accessories Pricing</button>
+        <button class="tab-btn" data-tab="quoteSection">Quote Builder</button>
+        <button class="tab-btn" data-tab="businessProfileSection">Business Profile</button>
+      </div>
 
-        <!-- TAB: ROOM CALCULATOR -->
-        <div id="calculatorSection" class="tab-panel">
-            <div class="calculator" id="roomCalculator">
-                <div id="noRoomMessage" class="muted">
-                    Add a room on the left to begin.
-                </div>
+      <!-- TAB: ROOM CALCULATOR -->
+      <div id="calculatorSection" class="tab-panel">
+        <div class="calculator" id="roomCalculator">
+          <div id="noRoomMessage" class="muted">
+            Add a room on the left to begin.
+          </div>
 
-                <div id="roomForm" style="display:none;">
+          <div id="roomForm" style="display:none;">
 
-                    <div class="room-header">
-                        <h2 id="roomTitle">No room selected</h2>
-                        <div class="room-actions">
-                            <button id="editRoomBtn" class="btn secondary">Rename</button>
-                            <button id="deleteRoomBtn" class="btn danger">Delete</button>
-                        </div>
-                    </div>
-
-                    <!-- ROOM DIMENSIONS -->
-                    <label for="length">Room Length (m)</label>
-                    <input type="number" id="length" step="0.01" min="0">
-
-                    <label for="widthInput" id="widthLabel">Room Width - Actual (m)</label>
-                    <input type="number" id="widthInput" step="0.01" min="0">
-
-                    <!-- ACCESSORIES SECTION (DYNAMIC) -->
-                    <div class="accessories-section">
-                        <h3>Accessories</h3>
-                        <div id="roomAccessories"></div>
-                    </div>
-
-                    <!-- CALCULATE -->
-                    <button id="calculateBtn" class="btn primary full-width">Calculate &amp; Save</button>
-                    <div id="roomSavedMsg" class="small-note"></div>
-
-                    <!-- OUTPUT -->
-                    <div id="result" class="result"></div>
-                </div>
+            <div class="room-header">
+              <h2 id="roomTitle">No room selected</h2>
+              <div class="room-actions">
+                <button id="editRoomBtn" class="btn secondary">Rename</button>
+                <button id="deleteRoomBtn" class="btn danger">Delete</button>
+              </div>
             </div>
-        </div>
 
-        <!-- TAB: ACCESSORIES PRICING -->
-        <div id="accessoriesSection" class="tab-panel" style="display:none;">
-            <div class="panel accessories-panel">
-                <h2>Accessories Pricing</h2>
-                <p class="muted">
-                    Add and manage accessories here (e.g. underlay, gripper, screed). These will appear in the room
-                    calculator with checkboxes and quantity boxes. Prices are stored in your account (cloud) and are ex VAT.
-                </p>
+            <!-- ROOM DIMENSIONS -->
+            <div class="panel" style="margin-top:10px;">
+              <h3>Room Dimensions</h3>
 
-                <div id="accessoriesPricingList"></div>
+              <label for="length">Room Length (m)</label>
+              <input type="number" id="length" step="0.01" min="0" />
 
-                <button id="saveAccessoriesBtn" class="btn primary">Save All Accessories</button>
-                <span id="accessoriesSavedMsg" class="small-note"></span>
+              <label for="widthInput" id="widthLabel">Room Width (m)</label>
+              <input type="number" id="widthInput" step="0.01" min="0" />
+
+              <div class="muted tiny" style="margin-top:8px;">
+                Room area auto-calculates from Length × Width and is used as the default Qty for sqm-based line items (editable per line).
+              </div>
             </div>
-        </div>
 
-        <!-- TAB: QUOTE BUILDER (CLIENT FACING) -->
-        <div id="quoteSection" class="tab-panel" style="display:none;">
-            <div id="quoteBuilder" class="summary">
-                <h2>Customer Quote</h2>
-
-                <div class="quote-controls no-print">
-                    <div class="quote-toggle">
-                        <label>
-                            <input type="checkbox" id="quoteShowAccessories">
-                            Show line items on customer quote
-                        </label>
-                    </div>
+            <!-- LINE ITEMS GRID -->
+            <div class="panel" style="margin-top:10px;">
+              <div class="line-items-header">
+                <h3 style="margin:0;">Room Line Items</h3>
+                <div class="muted tiny">
+                  Each line shows Qty + Unit Price so you can see exactly how totals are built. Override anytime.
                 </div>
+              </div>
 
-                <div id="quoteContent" class="quote-content"></div>
+              <div id="roomLineItems"></div>
 
-                <div class="quote-notes no-print">
-                    <label for="quoteNotes">Notes / Terms</label>
-                    <textarea id="quoteNotes" rows="4" placeholder="e.g. Quote valid for 30 days, subfloor preparation excluded unless stated..."></textarea>
-                </div>
-
-                <button id="quotePrintBtn" class="btn secondary no-print">Print / PDF Customer Quote</button>
+              <div class="line-items-actions no-print">
+                <button id="addCustomLineBtn" class="btn secondary">+ Add custom line</button>
+              </div>
             </div>
+
+            <button id="calculateBtn" class="btn primary full-width">Calculate &amp; Save</button>
+            <div id="roomSavedMsg" class="small-note"></div>
+
+            <div id="result" class="result"></div>
+          </div>
         </div>
+      </div>
 
-        <!-- TAB: BUSINESS PROFILE -->
-        <div id="businessProfileSection" class="tab-panel" style="display:none;">
-            <div class="panel business-panel">
-                <h2>Business Profile</h2>
-                <p class="muted">
-                    These details appear on your customer quotes. They are saved locally in your browser.
-                </p>
+      <!-- TAB: ACCESSORIES PRICING -->
+      <div id="accessoriesSection" class="tab-panel" style="display:none;">
+        <div class="panel accessories-panel">
+          <h2>Accessories Pricing</h2>
+          <p class="muted">
+            Set your default unit prices here (ex VAT). These become the default Unit Price in each room,
+            but can be overridden per room line.
+          </p>
 
-                <div class="bp-grid">
-                    <div>
-                        <label for="bpBusinessName">Business Name</label>
-                        <input type="text" id="bpBusinessName" placeholder="e.g. ABC Flooring Ltd">
-                    </div>
-                    <div>
-                        <label for="bpContactName">Contact Name</label>
-                        <input type="text" id="bpContactName" placeholder="Your name">
-                    </div>
-                    <div>
-                        <label for="bpAddress1">Address Line 1</label>
-                        <input type="text" id="bpAddress1">
-                    </div>
-                    <div>
-                        <label for="bpAddress2">Address Line 2</label>
-                        <input type="text" id="bpAddress2">
-                    </div>
-                    <div>
-                        <label for="bpTown">Town / City</label>
-                        <input type="text" id="bpTown">
-                    </div>
-                    <div>
-                        <label for="bpPostcode">Postcode</label>
-                        <input type="text" id="bpPostcode">
-                    </div>
-                    <div>
-                        <label for="bpPhone">Phone</label>
-                        <input type="text" id="bpPhone">
-                    </div>
-                    <div>
-                        <label for="bpEmail">Email</label>
-                        <input type="email" id="bpEmail">
-                    </div>
-                    <div>
-                        <label for="bpWebsite">Website</label>
-                        <input type="text" id="bpWebsite">
-                    </div>
-                    <div>
-                        <label for="bpVatNumber">VAT Number (optional)</label>
-                        <input type="text" id="bpVatNumber">
-                    </div>
-                    <div class="bp-checkbox">
-                        <label>
-                            <input type="checkbox" id="bpShowAccessories">
-                            Show accessories on customer quote by default
-                        </label>
-                    </div>
-                </div>
+          <div id="accessoriesPricingList"></div>
 
-                <div class="bp-notes">
-                    <label for="bpDefaultNotes">Default Notes / Terms</label>
-                    <textarea id="bpDefaultNotes" rows="4" placeholder="Standard terms you want to appear on every quote."></textarea>
-                </div>
+          <button id="saveAccessoriesBtn" class="btn primary">Save All Accessories</button>
+          <span id="accessoriesSavedMsg" class="small-note"></span>
+        </div>
+      </div>
 
-                <button id="saveBusinessProfileBtn" class="btn primary">Save Business Profile</button>
-                <span id="businessSavedMsg" class="small-note"></span>
+      <!-- TAB: QUOTE BUILDER -->
+      <div id="quoteSection" class="tab-panel" style="display:none;">
+        <div id="quoteBuilder" class="summary">
+          <h2>Customer Quote</h2>
+
+          <div class="quote-controls no-print">
+            <div class="quote-toggle">
+              <label>
+                <input type="checkbox" id="quoteShowLineItems">
+                Show line items (per room) on customer quote
+              </label>
             </div>
+          </div>
+
+          <div id="quoteContent" class="quote-content"></div>
+
+          <div class="quote-notes no-print">
+            <label for="quoteNotes">Notes / Terms</label>
+            <textarea id="quoteNotes" rows="4" placeholder="e.g. Quote valid for 30 days, subfloor preparation excluded unless stated..."></textarea>
+          </div>
+
+          <button id="quotePrintBtn" class="btn secondary no-print">Print / PDF Customer Quote</button>
         </div>
+      </div>
+
+      <!-- TAB: BUSINESS PROFILE -->
+      <div id="businessProfileSection" class="tab-panel" style="display:none;">
+        <div class="panel business-panel">
+          <h2>Business Profile</h2>
+          <p class="muted">
+            These details appear on your customer quotes. They are saved in the cloud to your account.
+          </p>
+
+          <div class="bp-grid">
+            <div>
+                <label for="bpLogoUrl">Logo URL (optional)</label>
+                <input type="text" id="bpLogoUrl" placeholder="https://yourdomain/logo.png">
+            </div>
+
+            <div>
+              <label for="bpBusinessName">Business Name</label>
+              <input type="text" id="bpBusinessName" placeholder="e.g. ABC Flooring Ltd" />
+            </div>
+            <div>
+              <label for="bpContactName">Contact Name</label>
+              <input type="text" id="bpContactName" placeholder="Your name" />
+            </div>
+            <div>
+              <label for="bpAddress1">Address Line 1</label>
+              <input type="text" id="bpAddress1" />
+            </div>
+            <div>
+              <label for="bpAddress2">Address Line 2</label>
+              <input type="text" id="bpAddress2" />
+            </div>
+            <div>
+              <label for="bpTown">Town / City</label>
+              <input type="text" id="bpTown" />
+            </div>
+            <div>
+              <label for="bpPostcode">Postcode</label>
+              <input type="text" id="bpPostcode" />
+            </div>
+            <div>
+              <label for="bpPhone">Phone</label>
+              <input type="text" id="bpPhone" />
+            </div>
+            <div>
+              <label for="bpEmail">Email</label>
+              <input type="email" id="bpEmail" />
+            </div>
+            <div>
+              <label for="bpWebsite">Website</label>
+              <input type="text" id="bpWebsite" />
+            </div>
+            <div>
+              <label for="bpVatNumber">VAT Number (optional)</label>
+              <input type="text" id="bpVatNumber" />
+            </div>
+            <div class="bp-checkbox">
+              <label>
+                <input type="checkbox" id="bpShowLineItems" />
+                Show line items on customer quote by default
+              </label>
+            </div>
+          </div>
+
+          <div class="bp-notes">
+            <label for="bpDefaultNotes">Default Notes / Terms</label>
+            <textarea id="bpDefaultNotes" rows="4" placeholder="Standard terms you want to appear on every quote."></textarea>
+          </div>
+
+          <button id="saveBusinessProfileBtn" class="btn primary">Save Business Profile</button>
+          <span id="businessSavedMsg" class="small-note"></span>
+        </div>
+      </div>
 
     </div>
-</div>
-
-<div id="stickyFooter" class="sticky-footer no-print">
-  <div class="footer-left">
-    <span id="footerRoomCount">0 rooms</span>
   </div>
-  <div class="footer-center">
-    <strong id="footerTotal">£0.00 ex VAT</strong>
-  </div>
-  <div class="footer-right">
-    <button class="btn secondary" onclick="renderQuote()">Quote</button>
-    <button class="btn primary" onclick="saveCustomer()">Save</button>
-  </div>
-</div>
 
-<script src="script.js"></script>
+  <div id="stickyFooter" class="sticky-footer no-print">
+    <div class="footer-left">
+      <span id="footerRoomCount">0 rooms</span>
+    </div>
+    <div class="footer-center">
+      <strong id="footerTotal">£0.00 ex VAT</strong>
+    </div>
+    <div class="footer-right">
+      <button class="btn secondary" onclick="renderQuote()">Quote</button>
+      <button class="btn primary" onclick="saveCustomer()">Save</button>
+    </div>
+  </div>
 
+  <script src="script.js"></script>
 </body>
 </html>
