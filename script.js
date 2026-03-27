@@ -221,28 +221,26 @@ async function apiFetch(path, options = {}) {
 function setAuthUI() {
   const status = document.getElementById("authStatus");
   const logoutBtn = document.getElementById("logoutBtn");
-  const openBtn = document.getElementById("openAuthBtn");
 
   const signedIn = !!authUser;
 
   if (signedIn) {
     status.textContent = `Signed in as ${authUser.email || "user"}`;
     logoutBtn.style.display = "inline-block";
-    openBtn.style.display = "none";
   } else {
     status.textContent = "Not signed in";
     logoutBtn.style.display = "none";
-    openBtn.style.display = "inline-block";
   }
 }
 
-function openAuthModal() {
-  lockApp(false);
-  document.getElementById("authModal").style.display = "flex";
+function showAuthScreen() {
+  document.getElementById("authScreen").style.display = "flex";
+  document.getElementById("appMain").style.display = "none";
 }
 
-function closeAuthModal() {
-  document.getElementById("authModal").style.display = "none";
+function hideAuthScreen() {
+  document.getElementById("authScreen").style.display = "none";
+  document.getElementById("appMain").style.display = "block";
 }
 
 async function hydrateAuthUser() {
@@ -263,16 +261,17 @@ async function hydrateAuthUser() {
 }
 
 function setupAuthUI() {
-  const openBtn = document.getElementById("openAuthBtn");
-  const closeBtn = document.getElementById("closeAuthModalBtn");
-  const modal = document.getElementById("authModal");
   const logoutBtn = document.getElementById("logoutBtn");
 
-  openBtn?.addEventListener("click", openAuthModal);
-  document.getElementById("lockSignInBtn")?.addEventListener("click", openAuthModal);
-  closeBtn?.addEventListener("click", closeAuthModal);
-  modal?.addEventListener("click", (e) => {
-    if (e.target?.id === "authModal") closeAuthModal();
+  // Auth screen tab switching
+  document.querySelectorAll(".auth-tab").forEach((tab) => {
+    tab.addEventListener("click", () => {
+      document.querySelectorAll(".auth-tab").forEach((t) => t.classList.remove("active"));
+      tab.classList.add("active");
+      const target = tab.dataset.authTab;
+      document.getElementById("authLoginPanel").style.display = target === "login" ? "block" : "none";
+      document.getElementById("authRegisterPanel").style.display = target === "register" ? "block" : "none";
+    });
   });
 
   document.getElementById("loginBtn")?.addEventListener("click", async (e) => {
@@ -291,7 +290,7 @@ function setupAuthUI() {
       await hydrateAuthUser();
       await syncFromCloud();
       unlockApp();
-      closeAuthModal();
+      hideAuthScreen();
     } catch (e) {
       msg.textContent = e.message;
     }
@@ -337,7 +336,7 @@ function setupAuthUI() {
       await hydrateAuthUser();
       await syncFromCloud();
       unlockApp();
-      closeAuthModal();
+      hideAuthScreen();
     } catch (e) {
       msg.textContent = e.message;
     }
@@ -350,7 +349,7 @@ function setupAuthUI() {
     clearCloudCache();
     setAuthUI();
     lockApp(true);
-    openAuthModal();
+    showAuthScreen();
   });
 
   hydrateAuthUser();
@@ -373,8 +372,7 @@ function unlockApp() {
 
 function requireAuth() {
   if (isSignedIn()) return true;
-  lockApp(true);
-  openAuthModal();
+  showAuthScreen();
   throw new Error("Please sign in to use MeasureIQ.");
 }
 
@@ -383,10 +381,10 @@ async function initCloudOnly() {
     await hydrateAuthUser();
   } catch {}
   if (!isSignedIn()) {
-    lockApp(false);
-    openAuthModal();
+    showAuthScreen();
     return;
   }
+  hideAuthScreen();
   lockApp(false);
   await syncFromCloud();
   showRoomForm(false);
