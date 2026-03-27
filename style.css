@@ -40,6 +40,8 @@ body {
 #appMain {
   padding: 20px;
   padding-bottom: 80px;
+  max-width: 100vw;
+  overflow-x: hidden;
 }
 
 /* ==========================================================
@@ -321,11 +323,20 @@ h2, h3 { margin-top: 8px; color: var(--dms-dark); }
   gap: 20px;
   align-items: flex-start;
   flex-wrap: nowrap;
+  max-width: 100%;
 }
 .layout > * { min-width: 0; }
 
 @media (max-width: 800px) {
-  .layout { flex-direction: column; }
+  .layout {
+    flex-direction: column;
+    width: 100%;
+  }
+  .layout > * {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
 }
 
 /* ---------- PANELS ---------- */
@@ -339,12 +350,14 @@ h2, h3 { margin-top: 8px; color: var(--dms-dark); }
   box-shadow: 0 2px 8px rgba(48, 48, 71, 0.06);
 }
 
-.project { flex: 0 0 280px; }
+.project { flex: 0 0 280px; max-width: 100%; }
 .right-column {
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 16px;
+  min-width: 0;
+  max-width: 100%;
 }
 
 /* ---------- FORMS ---------- */
@@ -510,6 +523,7 @@ textarea:focus {
   gap: 6px;
   margin-bottom: 10px;
   flex-wrap: wrap;
+  width: 100%;
 }
 
 .tab-btn {
@@ -522,6 +536,10 @@ textarea:focus {
   font-weight: 600;
   font-size: 0.9rem;
   transition: background 0.15s, color 0.15s;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .tab-btn.active {
@@ -566,6 +584,8 @@ textarea:focus {
   border-collapse: collapse;
   margin-bottom: 10px;
   font-size: 0.9rem;
+  table-layout: fixed;
+  word-wrap: break-word;
 }
 
 .summary-table th,
@@ -596,6 +616,7 @@ textarea:focus {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.9rem;
+  table-layout: auto;
 }
 
 .line-items-table th,
@@ -626,7 +647,7 @@ textarea:focus {
   gap: 8px;
 }
 
-.qty-wrap input[type="number"] { width: 120px; }
+.qty-wrap input[type="number"] { width: 120px; max-width: 100%; }
 
 .unit-pill {
   display: inline-block;
@@ -647,7 +668,7 @@ textarea:focus {
 }
 .auto-qty input { width: auto; accent-color: var(--dms-blue); }
 
-.cell-price input[type="number"] { width: 120px; }
+.cell-price input[type="number"] { width: 120px; max-width: 100%; }
 
 .cell-total { text-align: right; white-space: nowrap; }
 .cell-actions { text-align: right; }
@@ -678,6 +699,8 @@ textarea:focus {
   border-collapse: collapse;
   font-size: 0.9rem;
   margin-bottom: 8px;
+  table-layout: fixed;
+  word-wrap: break-word;
 }
 
 .quote-rooms-table th,
@@ -713,6 +736,8 @@ textarea:focus {
   gap: 10px;
   padding: 4px 0;
   font-size: 0.85rem;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .quote-line-meta { color: var(--dms-muted); }
@@ -782,6 +807,154 @@ textarea:focus {
   background: var(--dms-row-bg);
 }
 @media (max-width: 780px) { .auth-grid { grid-template-columns: 1fr; } }
+
+/* ---------- MOBILE APP LAYOUT ---------- */
+@media (max-width: 800px) {
+  #appMain {
+    padding: 12px;
+    padding-bottom: 80px;
+  }
+
+  .topbar {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+  .topbar__logo {
+    height: 28px;
+  }
+  #authStatus {
+    font-size: 0.75rem;
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .project {
+    flex: none;
+    width: 100%;
+  }
+
+  .tabs {
+    gap: 4px;
+  }
+  .tab-btn {
+    padding: 7px 6px;
+    font-size: 0.78rem;
+  }
+
+  .panel,
+  .calculator,
+  .summary,
+  .accessories-panel,
+  .business-panel {
+    padding: 12px;
+    overflow-x: hidden;
+    word-wrap: break-word;
+  }
+
+  /* Tables: horizontal scroll wrapper */
+  .line-items-table,
+  .summary-table,
+  .quote-rooms-table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .room-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .room-actions {
+    display: flex;
+    gap: 6px;
+    width: 100%;
+  }
+  .room-actions .btn {
+    margin-left: 0;
+    flex: 1;
+  }
+
+  .customer-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .customer-actions .btn {
+    width: 100%;
+  }
+
+  .quote-controls {
+    flex-direction: column;
+  }
+
+  .quote-line-row {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+
+  .bp-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-content {
+    width: 100%;
+    max-width: 100%;
+    border-radius: 10px;
+    padding: 12px;
+  }
+
+  .sticky-footer {
+    padding: 8px 10px;
+    gap: 6px;
+  }
+  .footer-left,
+  .footer-center,
+  .footer-right {
+    gap: 6px;
+  }
+  .footer-left span,
+  .footer-center strong {
+    font-size: 0.85rem;
+  }
+  .sticky-footer .btn {
+    padding: 6px 10px;
+    font-size: 0.8rem;
+  }
+
+  .qty-wrap {
+    flex-wrap: wrap;
+  }
+  .qty-wrap input[type="number"],
+  .cell-price input[type="number"] {
+    width: 80px;
+  }
+
+  .cost-block {
+    font-size: 0.85rem;
+  }
+
+  h2 { font-size: 1.15rem; }
+  h3 { font-size: 1rem; }
+}
+
+/* Small phones */
+@media (max-width: 400px) {
+  #appMain {
+    padding: 8px;
+    padding-bottom: 80px;
+  }
+  .tab-btn {
+    padding: 6px 4px;
+    font-size: 0.72rem;
+  }
+  .panel,
+  .calculator,
+  .summary {
+    padding: 10px;
+  }
+}
 
 /* ---------- PRINT STYLES ---------- */
 @media print {
