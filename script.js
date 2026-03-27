@@ -9,13 +9,116 @@ let businessProfile = null;
 let authUser = null;
 
 const AUTH_TOKEN_KEY = "measureiq_auth_token_v1";
-const API_BASE = "https://measureiq-production.up.railway.app";
+const API_BASE = "";  // same-origin for local dev
 const VAT_RATE = 0.2;
+
+//------------------------------------------------------
+// CLOUD CACHE + DEBOUNCED SAVE (NEW)
+//------------------------------------------------------
+let _cloudCache = null;       // in-memory mirror of the cloud JSONB blob
+let _cloudDirty = false;      // has the cache been modified since last save?
+let _saveTimer = null;        // debounce timer
+let _saveInFlight = false;    // is a save request currently in progress?
+const SAVE_DEBOUNCE_MS = 1500; // wait 1.5s after last change before saving
+
+/** Return cached cloud data, or fetch once if empty */
+async function getCloudData() {
+  if (_cloudCache) return _cloudCache;
+  if (!isSignedIn()) return {};
+  try {
+    _cloudCache = await apiFetch("/api/load", { method: "GET" });
+  } catch {
+    _cloudCache = {};
+  }
+  return _cloudCache;
+}
+
+/** Invalidate cache (e.g. on logout) */
+function clearCloudCache() {
+  _cloudCache = null;
+  _cloudDirty = false;
+  if (_saveTimer) { clearTimeout(_saveTimer); _saveTimer = null; }
+}
+
+/** Mark a key in the cache as changed and schedule a debounced save */
+function markCloudDirty(key, value) {
+  if (!_cloudCache) _cloudCache = {};
+  _cloudCache[key] = value;
+  _cloudDirty = true;
+  scheduleSave();
+}
+
+/** Schedule a save after SAVE_DEBOUNCE_MS of inactivity */
+function scheduleSave() {
+  if (_saveTimer) clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(() => flushSave(), SAVE_DEBOUNCE_MS);
+  showSaveStatus("pending");
+}
+
+/** Force an immediate save (used by explicit "Save" buttons) */
+async function flushSave() {
+  if (_saveTimer) { clearTimeout(_saveTimer); _saveTimer = null; }
+  if (!_cloudDirty || !isSignedIn() || !_cloudCache) {
+    showSaveStatus("idle");
+    return;
+  }
+  if (_saveInFlight) return; // another save is running; it will pick up changes
+
+  _saveInFlight = true;
+  _cloudDirty = false;
+  showSaveStatus("saving");
+
+  try {
+    await apiFetch("/api/save", {
+      method: "POST",
+      body: JSON.stringify(_cloudCache),
+    });
+    showSaveStatus("saved");
+  } catch (e) {
+    console.error("Cloud save failed", e);
+    _cloudDirty = true; // retry on next schedule
+    showSaveStatus("error");
+  } finally {
+    _saveInFlight = false;
+  }
+
+  // If more changes arrived while we were saving, flush again
+  if (_cloudDirty) scheduleSave();
+}
+
+/** Update the save status indicator in the UI */
+function showSaveStatus(state) {
+  const el = document.getElementById("saveStatus");
+  if (!el) return;
+  const labels = {
+    idle: "",
+    pending: "Unsaved changes…",
+    saving: "Saving…",
+    saved: "✓ Saved",
+    error: "⚠ Save failed — retrying…",
+  };
+  el.textContent = labels[state] || "";
+  el.className = `save-status save-status--${state}`;
+  if (state === "saved") {
+    setTimeout(() => {
+      if (el.textContent === "✓ Saved") { el.textContent = ""; el.className = "save-status"; }
+    }, 2000);
+  }
+}
 
 //------------------------------------------------------
 // INITIALISE APP
 //------------------------------------------------------
 document.addEventListener("DOMContentLoaded", () => {
+  // Inject save-status indicator into topbar
+  const topbar = document.querySelector(".topbar .auth");
+  if (topbar) {
+    const indicator = document.createElement("span");
+    indicator.id = "saveStatus";
+    indicator.className = "save-status";
+    topbar.insertBefore(indicator, topbar.firstChild);
+  }
+
   // Load system accessories
   fetch("data/accessories.json")
     .then((res) => res.json())
@@ -61,6 +164,15 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("quoteShowLineItems").addEventListener("change", () => renderQuote());
   document.getElementById("quoteNotes").addEventListener("input", () => renderQuote());
   document.getElementById("quotePrintBtn").addEventListener("click", () => window.print());
+
+  // Flush save before user leaves
+  window.addEventListener("beforeunload", (e) => {
+    if (_cloudDirty) {
+      flushSave();
+      e.preventDefault();
+      e.returnValue = "";
+    }
+  });
 
   setupTabs();
   setupAuthUI();
@@ -175,6 +287,7 @@ function setupAuthUI() {
         body: JSON.stringify({ email, password }),
       });
       setToken(data.token);
+      clearCloudCache(); // clear stale cache before fresh load
       await hydrateAuthUser();
       await syncFromCloud();
       unlockApp();
@@ -220,6 +333,7 @@ function setupAuthUI() {
         body: JSON.stringify({ email, password }),
       });
       setToken(data.token);
+      clearCloudCache();
       await hydrateAuthUser();
       await syncFromCloud();
       unlockApp();
@@ -230,8 +344,10 @@ function setupAuthUI() {
   });
 
   logoutBtn?.addEventListener("click", () => {
+    flushSave(); // save any pending changes before logout
     setToken(null);
     authUser = null;
+    clearCloudCache();
     setAuthUI();
     lockApp(true);
     openAuthModal();
@@ -276,17 +392,48 @@ async function initCloudOnly() {
   showRoomForm(false);
 }
 
+//------------------------------------------------------
+// SYNC FROM CLOUD — SINGLE FETCH (OPTIMISED)
+//------------------------------------------------------
 async function syncFromCloud() {
-  await Promise.all([
-    loadBusinessProfile(),
-    loadAccessoryDefinitions(),
-    loadSavedCustomers(),
-  ]);
+  // ONE fetch, distribute to all consumers
+  const cloud = await getCloudData();
 
+  // --- Business Profile ---
+  const defaults = {
+    businessName: "", contactName: "", address1: "", address2: "",
+    town: "", postcode: "", phone: "", email: "", website: "",
+    vatNumber: "", showLineItemsOnQuote: false, defaultNotes: "",
+  };
+  const savedBP = cloud.businessProfile && typeof cloud.businessProfile === "object"
+    ? cloud.businessProfile : null;
+  businessProfile = { ...defaults, ...(savedBP || {}) };
+  applyBusinessProfileToUI();
+
+  // --- Accessory Definitions ---
+  const userPrices = cloud.accessoryPrices && typeof cloud.accessoryPrices === "object"
+    ? cloud.accessoryPrices : {};
+  if (SYSTEM_ACCESSORIES.length) {
+    accessoriesDefs = buildAccessories(SYSTEM_ACCESSORIES, userPrices);
+    renderAccessoriesPricingPanel();
+  }
+
+  // --- Saved Customers ---
+  renderSavedCustomersList(cloud);
+
+  // --- Normalise rooms ---
   rooms.forEach((r, i) => {
     if (typeof r.collapsed !== "boolean") r.collapsed = i !== 0;
     normaliseRoomLines(r);
   });
+
+  // If active room open, re-render
+  const activeRoom = rooms.find((r) => r.id === activeRoomId);
+  if (activeRoom) {
+    renderRoomLineItems(activeRoom);
+    syncAutoQtyLinesToRoomArea();
+    calculateRoom(true);
+  }
 
   updateRoomList();
 }
@@ -322,41 +469,6 @@ function setupTabs() {
 //------------------------------------------------------
 // BUSINESS PROFILE
 //------------------------------------------------------
-async function loadBusinessProfile() {
-  let cloud = null;
-
-  if (isSignedIn()) {
-    try {
-      cloud = await apiFetch("/api/load", { method: "GET" });
-    } catch {
-      cloud = null;
-    }
-  }
-
-  const defaults = {
-    businessName: "",
-    contactName: "",
-    address1: "",
-    address2: "",
-    town: "",
-    postcode: "",
-    phone: "",
-    email: "",
-    website: "",
-    vatNumber: "",
-    showLineItemsOnQuote: false,
-    defaultNotes: "",
-  };
-
-  const saved =
-    cloud && cloud.businessProfile && typeof cloud.businessProfile === "object"
-      ? cloud.businessProfile
-      : null;
-
-  businessProfile = { ...defaults, ...(saved || {}) };
-  applyBusinessProfileToUI();
-}
-
 function applyBusinessProfileToUI() {
   safeSetValue("bpBusinessName", businessProfile.businessName);
   safeSetValue("bpContactName", businessProfile.contactName);
@@ -401,18 +513,11 @@ async function saveBusinessProfile() {
     defaultNotes: getValue("bpDefaultNotes"),
   };
 
-  if (!isSignedIn()) {
-    requireAuth();
-    return;
-  }
+  if (!isSignedIn()) { requireAuth(); return; }
 
-  const cloud = await apiFetch("/api/load", { method: "GET" });
-  cloud.businessProfile = businessProfile;
-
-  await apiFetch("/api/save", {
-    method: "POST",
-    body: JSON.stringify(cloud),
-  });
+  // OPTIMISED: merge into cache and flush immediately (no re-fetch)
+  markCloudDirty("businessProfile", businessProfile);
+  await flushSave();
 
   const msg = document.getElementById("businessSavedMsg");
   msg.textContent = "Saved";
@@ -498,7 +603,7 @@ function updateRoomList() {
   container.innerHTML = "";
 
   if (!rooms.length) {
-    container.innerHTML = `<p class="muted" style="margin-top:10px;">No rooms yet. Tap “+ Add Room”.</p>`;
+    container.innerHTML = `<p class="muted" style="margin-top:10px;">No rooms yet. Tap "+ Add Room".</p>`;
     return;
   }
 
@@ -586,41 +691,6 @@ function buildAccessories(system, userPrices = {}) {
   }));
 }
 
-async function loadAccessoryDefinitions() {
-  let cloud = null;
-
-  if (isSignedIn()) {
-    try {
-      cloud = await apiFetch("/api/load", { method: "GET" });
-    } catch {
-      cloud = null;
-    }
-  }
-
-  const userPrices =
-    cloud && cloud.accessoryPrices && typeof cloud.accessoryPrices === "object"
-      ? cloud.accessoryPrices
-      : {};
-
-  if (!SYSTEM_ACCESSORIES.length) return;
-
-  accessoriesDefs = buildAccessories(SYSTEM_ACCESSORIES, userPrices);
-  renderAccessoriesPricingPanel();
-
-  // Ensure every room includes accessory lines (optional, but keeps UI consistent)
-  rooms.forEach((r) => {
-    normaliseRoomLines(r);
-  });
-
-  // If active room open, re-render its grid so new default prices appear
-  const activeRoom = rooms.find((r) => r.id === activeRoomId);
-  if (activeRoom) {
-    renderRoomLineItems(activeRoom);
-    syncAutoQtyLinesToRoomArea();
-    calculateRoom(true);
-  }
-}
-
 async function saveAccessoryDefinitions() {
   const container = document.getElementById("accessoriesPricingList");
   if (!container) return;
@@ -633,18 +703,11 @@ async function saveAccessoryDefinitions() {
     prices[id] = parseFloat(priceInput.value) || 0;
   });
 
-  if (!isSignedIn()) {
-    requireAuth();
-    return;
-  }
+  if (!isSignedIn()) { requireAuth(); return; }
 
-  const cloud = await apiFetch("/api/load", { method: "GET" });
-  cloud.accessoryPrices = prices;
-
-  await apiFetch("/api/save", {
-    method: "POST",
-    body: JSON.stringify(cloud),
-  });
+  // OPTIMISED: merge into cache and flush immediately (no re-fetch)
+  markCloudDirty("accessoryPrices", prices);
+  await flushSave();
 
   const msg = document.getElementById("accessoriesSavedMsg");
   msg.textContent = "Saved";
@@ -920,7 +983,7 @@ function renderRoomLineItems(room) {
     </table>
 
     <div class="muted tiny" style="margin-top:8px;">
-      Tip: For sqm lines, “Auto” uses the room’s area as the Qty. Untick it to override the Qty.
+      Tip: For sqm lines, "Auto" uses the room's area as the Qty. Untick it to override the Qty.
     </div>
   `;
 
@@ -1037,7 +1100,7 @@ function removeCustomLine(lineId) {
 }
 
 //------------------------------------------------------
-// CALCULATE ROOM & AUTO-SAVE
+// CALCULATE ROOM & AUTO-SAVE (OPTIMISED)
 //------------------------------------------------------
 function calculateRoom(auto = false) {
   const resultDiv = document.getElementById("result");
@@ -1116,8 +1179,10 @@ function calculateRoom(auto = false) {
 
   updateRoomList();
   updateStickyFooter();
-  autoUpdateCurrentCustomer();
   renderQuote();
+
+  // OPTIMISED: debounced auto-save instead of per-keystroke network calls
+  autoUpdateCurrentCustomer();
 
   if (!auto && savedMsg) {
     savedMsg.textContent = "✓ Room saved";
@@ -1252,7 +1317,7 @@ function buildQuoteLineItems(room) {
 }
 
 //------------------------------------------------------
-// CUSTOMER SAVE / LOAD (CLOUD-ONLY, JSONB)
+// CUSTOMER SAVE / LOAD (CLOUD-ONLY, OPTIMISED)
 //------------------------------------------------------
 async function saveCustomer() {
   const name = document.getElementById("customerName").value.trim();
@@ -1263,81 +1328,50 @@ async function saveCustomer() {
     return;
   }
 
-  if (!isSignedIn()) {
-    requireAuth();
-    return;
-  }
+  if (!isSignedIn()) { requireAuth(); return; }
 
-  const record = {
-    name,
-    jobRef,
-    rooms,
-    timestamp: Date.now(),
-  };
+  const record = { name, jobRef, rooms, timestamp: Date.now() };
 
-  const cloud = await apiFetch("/api/load", { method: "GET" });
+  // OPTIMISED: use cache, no re-fetch
+  const cloud = await getCloudData();
   const customers = Array.isArray(cloud.customers) ? cloud.customers : [];
 
   const idx = customers.findIndex((c) => c.name === name);
   if (idx >= 0) customers[idx] = record;
   else customers.push(record);
 
-  cloud.customers = customers;
+  markCloudDirty("customers", customers);
+  await flushSave(); // explicit save button = flush immediately
 
-  await apiFetch("/api/save", {
-    method: "POST",
-    body: JSON.stringify(cloud),
-  });
-
-  await loadSavedCustomers();
+  renderSavedCustomersList(_cloudCache);
   alert("Customer saved!");
 }
 
-async function autoUpdateCurrentCustomer() {
+/** OPTIMISED: debounced auto-save — no network call per keystroke */
+function autoUpdateCurrentCustomer() {
   const name = document.getElementById("customerName").value.trim();
   if (!name || !isSignedIn()) return;
 
   const jobRef = document.getElementById("jobRef").value.trim();
+  const record = { name, jobRef, rooms, timestamp: Date.now() };
 
-  const record = {
-    name,
-    jobRef,
-    rooms,
-    timestamp: Date.now(),
-  };
+  if (!_cloudCache) _cloudCache = {};
+  const customers = Array.isArray(_cloudCache.customers) ? _cloudCache.customers : [];
 
-  try {
-    const cloud = await apiFetch("/api/load", { method: "GET" });
-    const customers = Array.isArray(cloud.customers) ? cloud.customers : [];
+  const idx = customers.findIndex((c) => c.name === name);
+  if (idx >= 0) customers[idx] = record;
+  else customers.push(record);
 
-    const idx = customers.findIndex((c) => c.name === name);
-    if (idx >= 0) customers[idx] = record;
-    else customers.push(record);
-
-    cloud.customers = customers;
-
-    apiFetch("/api/save", {
-      method: "POST",
-      body: JSON.stringify(cloud),
-    }).catch(() => {});
-  } catch {
-    // silent
-  }
+  // Mark dirty — the debounced scheduler will batch this with other changes
+  markCloudDirty("customers", customers);
 }
 
-async function loadSavedCustomers() {
+/** Render the saved customers list from a cloud data object (no fetch needed) */
+function renderSavedCustomersList(cloud) {
   const list = document.getElementById("savedCustomersList");
   list.innerHTML = "";
 
-  if (!isSignedIn()) return;
-
-  let cloud;
-  try {
-    cloud = await apiFetch("/api/load", { method: "GET" });
-  } catch (e) {
-    console.error("Failed to load cloud data", e);
-    return;
-  }
+  if (!isSignedIn() || !cloud) return;
 
   const customers = Array.isArray(cloud.customers) ? cloud.customers : [];
 
@@ -1393,25 +1427,19 @@ function loadCustomer(c) {
 }
 
 async function deleteCustomer(name) {
-  if (!isSignedIn()) {
-    requireAuth();
-    return;
-  }
+  if (!isSignedIn()) { requireAuth(); return; }
 
-  const cloud = await apiFetch("/api/load", { method: "GET" });
+  // OPTIMISED: use cache, no re-fetch
+  const cloud = await getCloudData();
   const customers = Array.isArray(cloud.customers) ? cloud.customers : [];
 
-  cloud.customers = customers.filter((c) => c.name !== name);
-
-  await apiFetch("/api/save", {
-    method: "POST",
-    body: JSON.stringify(cloud),
-  });
+  markCloudDirty("customers", customers.filter((c) => c.name !== name));
+  await flushSave();
 
   rooms = [];
   activeRoomId = null;
 
-  await loadSavedCustomers();
+  renderSavedCustomersList(_cloudCache);
 
   clearRoomForm();
   showRoomForm(false);
@@ -1515,4 +1543,3 @@ function generateQuoteNumber() {
   const now = new Date();
   return `Q-${now.getFullYear()}${String(now.getMonth()+1).padStart(2,"0")}${String(now.getDate()).padStart(2,"0")}-${now.getTime().toString().slice(-5)}`;
 }
-
