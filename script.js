@@ -342,15 +342,28 @@ function setupAuthUI() {
     }
   });
 
-  logoutBtn?.addEventListener("click", () => {
-    flushSave(); // save any pending changes before logout
-    setToken(null);
-    authUser = null;
-    clearCloudCache();
-    setAuthUI();
-    lockApp(true);
-    showAuthScreen();
-  });
+logoutBtn?.addEventListener("click", () => {
+  flushSave();
+  setToken(null);
+  authUser = null;
+  clearCloudCache();
+
+  // ✅ Reset all in-memory state so previous user's data doesn't bleed through
+  rooms = [];
+  activeRoomId = null;
+  businessProfile = null;
+  accessoriesDefs = [];
+
+  // ✅ Clear the UI too
+  newCustomer(); // clears customer name, job ref, rooms UI
+  document.getElementById("savedCustomersList").innerHTML = "";
+  document.getElementById("accessoriesPricingList").innerHTML = "";
+  renderQuote();
+
+  setAuthUI();
+  lockApp(true);
+  showAuthScreen();
+});
 
   hydrateAuthUser();
 }
