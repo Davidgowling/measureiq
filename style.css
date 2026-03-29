@@ -553,6 +553,90 @@ textarea:focus {
   border-color: var(--dms-blue);
 }
 
+/* ---------- HAMBURGER NAV ---------- */
+.hamburger-nav {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.hamburger-btn {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 36px;
+  height: 26px;
+  background: var(--dms-dark);
+  border: none;
+  border-radius: 6px;
+  padding: 5px 6px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.hamburger-btn span {
+  display: block;
+  height: 2px;
+  background: #ffffff;
+  border-radius: 2px;
+  transition: all 0.2s;
+}
+
+.hamburger-btn.open span:nth-child(1) {
+  transform: translateY(8px) rotate(45deg);
+}
+.hamburger-btn.open span:nth-child(2) {
+  opacity: 0;
+}
+.hamburger-btn.open span:nth-child(3) {
+  transform: translateY(-8px) rotate(-45deg);
+}
+
+.current-tab-label {
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--dms-dark);
+}
+
+.hamburger-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  background: var(--dms-card);
+  border: 1px solid var(--dms-border);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(48,48,71,0.15);
+  z-index: 200;
+  min-width: 220px;
+  overflow: hidden;
+}
+
+.hamburger-item {
+  display: block;
+  width: 100%;
+  padding: 13px 18px;
+  border: none;
+  background: none;
+  text-align: left;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--dms-text);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.hamburger-item:hover {
+  background: var(--dms-row-bg);
+}
+
+.hamburger-item.active {
+  background: var(--dms-dark);
+  color: #ffffff;
+  font-weight: 600;
+}
+
 /* ---------- ROOM HEADER ---------- */
 .room-header {
   display: flex;

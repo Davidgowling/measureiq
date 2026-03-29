@@ -453,7 +453,6 @@ async function syncFromCloud() {
 // TABS
 //------------------------------------------------------
 function setupTabs() {
-  const buttons = document.querySelectorAll(".tab-btn");
   const panels = {
     calculatorSection: document.getElementById("calculatorSection"),
     accessoriesSection: document.getElementById("accessoriesSection"),
@@ -461,17 +460,45 @@ function setupTabs() {
     businessProfileSection: document.getElementById("businessProfileSection"),
   };
 
-  buttons.forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const target = btn.dataset.tab;
+  const hamburgerBtn = document.getElementById("hamburgerBtn");
+  const hamburgerMenu = document.getElementById("hamburgerMenu");
+  const currentTabLabel = document.getElementById("currentTabLabel");
 
-      buttons.forEach((b) => b.classList.remove("active"));
-      btn.classList.add("active");
+  // Toggle menu open/close
+  hamburgerBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const isOpen = hamburgerMenu.style.display === "block";
+    hamburgerMenu.style.display = isOpen ? "none" : "block";
+    hamburgerBtn.classList.toggle("open", !isOpen);
+  });
 
-      Object.entries(panels).forEach(([id, panel]) => {
-        panel.style.display = id === target ? "block" : "none";
+  // Close menu when clicking outside
+  document.addEventListener("click", () => {
+    hamburgerMenu.style.display = "none";
+    hamburgerBtn.classList.remove("open");
+  });
+
+  // Handle menu item clicks
+  document.querySelectorAll(".hamburger-item").forEach((item) => {
+    item.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const target = item.dataset.tab;
+
+      // Switch panels
+      Object.entries(panels).forEach(([key, panel]) => {
+        if (panel) panel.style.display = key === target ? "block" : "none";
       });
 
+      // Update active state and label
+      document.querySelectorAll(".hamburger-item").forEach((i) => i.classList.remove("active"));
+      item.classList.add("active");
+      currentTabLabel.textContent = item.textContent.replace(/^.{2}/, "").trim(); // strip emoji
+
+      // Close menu
+      hamburgerMenu.style.display = "none";
+      hamburgerBtn.classList.remove("open");
+
+      // Re-render quote if switching to it
       if (target === "quoteSection") renderQuote();
     });
   });

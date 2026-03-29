@@ -123,11 +123,17 @@
       <!-- RIGHT COLUMN -->
       <div class="right-column">
 
-        <div class="tabs no-print">
-          <button class="tab-btn active" data-tab="calculatorSection">Room Calculator</button>
-          <button class="tab-btn" data-tab="accessoriesSection">Accessories Pricing</button>
-          <button class="tab-btn" data-tab="quoteSection">Quote Builder</button>
-          <button class="tab-btn" data-tab="businessProfileSection">Business Profile</button>
+        <div class="hamburger-nav no-print">
+          <button id="hamburgerBtn" class="hamburger-btn" aria-label="Menu">
+            <span></span><span></span><span></span>
+          </button>
+          <span id="currentTabLabel" class="current-tab-label">Room Calculator</span>
+          <div id="hamburgerMenu" class="hamburger-menu" style="display:none;">
+            <button class="hamburger-item active" data-tab="calculatorSection">🏠 Room Calculator</button>
+            <button class="hamburger-item" data-tab="accessoriesSection">🔧 Accessories Pricing</button>
+            <button class="hamburger-item" data-tab="quoteSection">📄 Quote Builder</button>
+            <button class="hamburger-item" data-tab="businessProfileSection">👤 Business Profile</button>
+          </div>
         </div>
 
         <!-- TAB: ROOM CALCULATOR -->
