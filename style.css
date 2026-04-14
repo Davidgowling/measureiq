@@ -436,7 +436,20 @@ body {
 .topbar .brand { display: flex; align-items: center; gap: 10px; }
 .topbar h1 { margin: 0; font-size: 22px; color: #ffffff; }
 .auth { display: flex; align-items: center; gap: 10px; }
-#authStatus { color: rgba(255,255,255,0.75); }
+#authStatus {
+  color: rgba(255,255,255,0.75);
+  font-size: 0.82rem;
+}
+
+/* Logout button — compact, sits neatly in the topbar */
+#logoutBtn {
+  margin-top: 0;
+  padding: 5px 12px;
+  font-size: 0.8rem;
+  border-radius: 5px;
+  background: rgba(232, 28, 115, 0.75);
+  border: 1px solid var(--dms-pink);
+}
 
 h2, h3 { margin-top: 8px; color: var(--dms-dark); }
 
@@ -1236,6 +1249,11 @@ textarea:focus {
     padding: 0 !important;
     max-width: none !important;
     overflow: visible !important;
+  }
+
+  /* Strip page-view padding so the quote fills the page */
+  .page-view {
+    padding: 0 !important;
   }
 
   /* Flatten the two-column layout */
