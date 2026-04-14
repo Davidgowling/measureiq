@@ -6,7 +6,6 @@ const path = require("path");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const cors = require("cors");
-const rateLimit = require("express-rate-limit");
 const { Pool } = require("pg");
 const { Resend } = require("resend");
 
@@ -34,15 +33,39 @@ app.use(cors());
 app.use(express.static(path.join(__dirname, "..")));
 
 // --------------------------------------------------
-// Rate limiting (auth endpoints)
+// Rate limiting — built-in, no external packages
 // --------------------------------------------------
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 20,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { error: "Too many attempts. Please try again in 15 minutes." },
-});
+const _rlStore = new Map();
+const RL_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+const RL_MAX = 20;
+
+// Prune expired entries every 15 minutes to prevent memory growth
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, rec] of _rlStore.entries()) {
+    if (now > rec.resetAt) _rlStore.delete(key);
+  }
+}, RL_WINDOW_MS).unref();
+
+function authLimiter(req, res, next) {
+  const ip = req.ip || req.socket.remoteAddress || "unknown";
+  const now = Date.now();
+  const rec = _rlStore.get(ip) || { count: 0, resetAt: now + RL_WINDOW_MS };
+
+  if (now > rec.resetAt) {
+    rec.count = 0;
+    rec.resetAt = now + RL_WINDOW_MS;
+  }
+
+  rec.count += 1;
+  _rlStore.set(ip, rec);
+
+  if (rec.count > RL_MAX) {
+    return res.status(429).json({ error: "Too many attempts. Please try again in 15 minutes." });
+  }
+
+  next();
+}
 
 // --------------------------------------------------
 // DB INIT
