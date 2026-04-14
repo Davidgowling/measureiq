@@ -505,58 +505,60 @@ async function syncFromCloud() {
 }
 
 //------------------------------------------------------
-// TABS
+// TABS / PAGE NAVIGATION
 //------------------------------------------------------
 function setupTabs() {
-  const panels = {
+  const pages = {
+    jobs:        document.getElementById("pageJobs"),
+    accessories: document.getElementById("pageAccessories"),
+    profile:     document.getElementById("pageProfile"),
+  };
+  const stickyFooter = document.getElementById("stickyFooter");
+
+  function switchPage(page) {
+    Object.entries(pages).forEach(([key, el]) => {
+      if (el) el.style.display = key === page ? "block" : "none";
+    });
+    document.querySelectorAll(".primary-nav__btn").forEach((b) => {
+      b.classList.toggle("active", b.dataset.page === page);
+    });
+    // Footer only visible on Jobs page
+    if (stickyFooter) stickyFooter.style.display = page === "jobs" ? "block" : "none";
+  }
+
+  document.querySelectorAll(".primary-nav__btn").forEach((btn) => {
+    btn.addEventListener("click", () => switchPage(btn.dataset.page));
+  });
+
+  // Sub-tab switching within the Jobs page (Calculator / Quote)
+  const subPanels = {
     calculatorSection: document.getElementById("calculatorSection"),
-    accessoriesSection: document.getElementById("accessoriesSection"),
-    quoteSection: document.getElementById("quoteSection"),
-    businessProfileSection: document.getElementById("businessProfileSection"),
+    quoteSection:      document.getElementById("quoteSection"),
   };
 
-  const hamburgerBtn = document.getElementById("hamburgerBtn");
-  const hamburgerMenu = document.getElementById("hamburgerMenu");
-  const currentTabLabel = document.getElementById("currentTabLabel");
-
-  // Toggle menu open/close
-  hamburgerBtn.addEventListener("click", (e) => {
-    e.stopPropagation();
-    const isOpen = hamburgerMenu.style.display === "block";
-    hamburgerMenu.style.display = isOpen ? "none" : "block";
-    hamburgerBtn.classList.toggle("open", !isOpen);
-  });
-
-  // Close menu when clicking outside
-  document.addEventListener("click", () => {
-    hamburgerMenu.style.display = "none";
-    hamburgerBtn.classList.remove("open");
-  });
-
-  // Handle menu item clicks
-  document.querySelectorAll(".hamburger-item").forEach((item) => {
-    item.addEventListener("click", (e) => {
-      e.stopPropagation();
-      const target = item.dataset.tab;
-
-      // Switch panels
-      Object.entries(panels).forEach(([key, panel]) => {
-        if (panel) panel.style.display = key === target ? "block" : "none";
-      });
-
-      // Update active state and label
-      document.querySelectorAll(".hamburger-item").forEach((i) => i.classList.remove("active"));
-      item.classList.add("active");
-      currentTabLabel.textContent = item.textContent.replace(/^.{2}/, "").trim(); // strip emoji
-
-      // Close menu
-      hamburgerMenu.style.display = "none";
-      hamburgerBtn.classList.remove("open");
-
-      // Re-render quote if switching to it
-      if (target === "quoteSection") renderQuote();
+  function switchSubTab(tab) {
+    Object.entries(subPanels).forEach(([key, panel]) => {
+      if (panel) panel.style.display = key === tab ? "block" : "none";
     });
+    document.querySelectorAll(".subtab").forEach((t) => {
+      t.classList.toggle("active", t.dataset.tab === tab);
+    });
+    if (tab === "quoteSection") renderQuote();
+  }
+
+  document.querySelectorAll(".subtab").forEach((tab) => {
+    tab.addEventListener("click", () => switchSubTab(tab.dataset.tab));
   });
+
+  // Expose switchPage/switchSubTab for use by navigateToQuote etc.
+  window._switchPage   = switchPage;
+  window._switchSubTab = switchSubTab;
+}
+
+/** Navigate to the Jobs page and open the Quote sub-tab */
+function navigateToQuote() {
+  if (window._switchPage)   window._switchPage("jobs");
+  if (window._switchSubTab) window._switchSubTab("quoteSection");
 }
 
 //------------------------------------------------------

@@ -38,10 +38,93 @@ body {
 }
 
 #appMain {
-  padding: 20px;
-  padding-bottom: 80px;
   max-width: 100vw;
   overflow-x: hidden;
+}
+
+/* -------------------------------------------------------
+   PRIMARY NAVIGATION BAR (below topbar)
+------------------------------------------------------- */
+.primary-nav {
+  background: var(--dms-dark-hover);
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 0 18px;
+  position: sticky;
+  top: 66px; /* sits directly below the topbar */
+  z-index: 9;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.primary-nav__btn {
+  padding: 13px 20px;
+  border: none;
+  background: none;
+  color: rgba(255,255,255,0.65);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+
+.primary-nav__btn:hover {
+  color: #ffffff;
+}
+
+.primary-nav__btn.active {
+  color: #ffffff;
+  border-bottom-color: var(--dms-green);
+  font-weight: 600;
+}
+
+/* -------------------------------------------------------
+   PAGE VIEWS & CONTAINERS
+------------------------------------------------------- */
+.page-view {
+  padding: 20px;
+  padding-bottom: 90px;
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+/* Constrain standalone pages (Accessories, Business Profile) to readable width */
+.page-container {
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+/* -------------------------------------------------------
+   SUB-TABS (Calculator / Quote within Jobs page)
+------------------------------------------------------- */
+.subtabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 16px;
+  border-bottom: 2px solid var(--dms-border-lt);
+}
+
+.subtab {
+  padding: 10px 22px;
+  border: none;
+  background: none;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--dms-muted);
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.subtab:hover { color: var(--dms-text); }
+
+.subtab.active {
+  color: var(--dms-dark);
+  border-bottom-color: var(--dms-blue);
+  font-weight: 600;
 }
 
 /* ==========================================================
@@ -958,9 +1041,22 @@ textarea:focus {
 
 /* ---------- MOBILE APP LAYOUT ---------- */
 @media (max-width: 800px) {
-  #appMain {
+  .page-view {
     padding: 12px;
-    padding-bottom: 80px;
+    padding-bottom: 90px;
+  }
+
+  /* Primary nav wraps to scrollable row on small screens */
+  .primary-nav {
+    top: 50px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 4px;
+  }
+
+  .primary-nav__btn {
+    padding: 11px 14px;
+    font-size: 0.85rem;
   }
 
   .topbar {
@@ -1128,11 +1224,12 @@ textarea:focus {
   .tabs,
   .modal,
   .topbar,
+  .primary-nav,
   .sticky-footer,
-  .hamburger-nav,
+  .subtabs,
   #calculatorSection,
-  #accessoriesSection,
-  #businessProfileSection { display: none !important; }
+  #pageAccessories,
+  #pageProfile { display: none !important; }
 
   /* Flatten the app wrapper — no padding, full width */
   #appMain {
