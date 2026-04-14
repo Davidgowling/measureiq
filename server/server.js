@@ -28,6 +28,7 @@ const pool = new Pool({
 // --------------------------------------------------
 // Middleware
 // --------------------------------------------------
+app.set("trust proxy", 1); // trust Railway's reverse proxy for accurate client IPs
 app.use(express.json());
 app.use(cors());
 app.use(express.static(path.join(__dirname, "..")));
