@@ -206,6 +206,46 @@ body {
   text-align: center;
 }
 
+/* ---------- PASSWORD STRENGTH METER ---------- */
+.password-strength {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.password-strength__bar {
+  flex: 1;
+  height: 4px;
+  background: var(--dms-border-lt);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.password-strength__fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 4px;
+  transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.password-strength__fill--weak   { background: var(--dms-pink); }
+.password-strength__fill--fair   { background: #f0a500; }
+.password-strength__fill--good   { background: var(--dms-blue); }
+.password-strength__fill--strong { background: var(--dms-green); }
+
+.password-strength__label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  min-width: 50px;
+  text-align: right;
+}
+
+.password-strength__label--weak   { color: var(--dms-pink); }
+.password-strength__label--fair   { color: #f0a500; }
+.password-strength__label--good   { color: var(--dms-blue); }
+.password-strength__label--strong { color: var(--dms-green); }
+
 /* Mobile: stack vertically */
 @media (max-width: 800px) {
   .auth-screen {
@@ -457,11 +497,35 @@ textarea:focus {
   margin-top: 8px;
 }
 
+.customer-search {
+  width: 100%;
+  padding: 7px 10px;
+  margin-top: 6px;
+  border: 1px solid var(--dms-border);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  background: var(--dms-card);
+  color: var(--dms-text);
+  box-sizing: border-box;
+}
+.customer-search:focus {
+  outline: none;
+  border-color: var(--dms-blue);
+  box-shadow: 0 0 0 2px rgba(21, 176, 220, 0.2);
+}
+
 .saved-list {
   list-style: none;
   padding: 0;
   margin-top: 8px;
 }
+
+.saved-list .no-results {
+  cursor: default;
+  font-style: italic;
+  font-size: 0.85rem;
+}
+.saved-list .no-results:hover { background: var(--dms-row-bg); }
 .saved-list li {
   display: flex;
   justify-content: space-between;
@@ -1126,8 +1190,21 @@ body.locked .layout {
 /* ---------- QUOTE HEADER LAYOUT ---------- */
 .quote-header {
   display: flex;
-  justify-content: flex-end;
+  align-items: flex-start;
+  justify-content: space-between;
   margin-bottom: 12px;
+  gap: 16px;
+}
+
+.quote-logo {
+  flex-shrink: 0;
+}
+
+.quote-logo__img {
+  max-height: 80px;
+  max-width: 200px;
+  object-fit: contain;
+  display: block;
 }
 
 .quote-business {

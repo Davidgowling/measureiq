@@ -139,6 +139,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.getElementById("saveCustomerBtn").addEventListener("click", saveCustomer);
   document.getElementById("newCustomerBtn").addEventListener("click", newCustomer);
+  document.getElementById("customerSearch")?.addEventListener("input", () => {
+    renderSavedCustomersList(_cloudCache);
+  });
 
   document.getElementById("calculateBtn").addEventListener("click", () => calculateRoom(false));
 
@@ -281,6 +284,12 @@ function setupAuthUI() {
     try {
       const email = document.getElementById("loginEmail").value.trim();
       const password = document.getElementById("loginPassword").value;
+
+      if (!email || !password) {
+        msg.textContent = "Please enter your email and password.";
+        return;
+      }
+
       const data = await apiFetch("/api/auth/login", {
         method: "POST",
         body: JSON.stringify({ email, password }),
@@ -320,6 +329,41 @@ function setupAuthUI() {
     }
   });
 
+  // Password strength indicator
+  document.getElementById("registerPassword")?.addEventListener("input", (e) => {
+    const val = e.target.value;
+    const fill = document.getElementById("passwordStrengthFill");
+    const label = document.getElementById("passwordStrengthLabel");
+    if (!fill || !label) return;
+
+    if (!val) {
+      fill.style.width = "0%";
+      fill.className = "password-strength__fill";
+      label.textContent = "";
+      return;
+    }
+
+    let score = 0;
+    if (val.length >= 8) score++;
+    if (val.length >= 12) score++;
+    if (/[A-Z]/.test(val)) score++;
+    if (/[0-9]/.test(val)) score++;
+    if (/[^A-Za-z0-9]/.test(val)) score++;
+
+    const levels = [
+      { pct: "20%", cls: "weak",   text: "Too short" },
+      { pct: "40%", cls: "weak",   text: "Weak" },
+      { pct: "60%", cls: "fair",   text: "Fair" },
+      { pct: "80%", cls: "good",   text: "Good" },
+      { pct: "100%",cls: "strong", text: "Strong" },
+    ];
+    const lvl = levels[Math.min(score, levels.length - 1)];
+    fill.style.width = lvl.pct;
+    fill.className = `password-strength__fill password-strength__fill--${lvl.cls}`;
+    label.textContent = lvl.text;
+    label.className = `password-strength__label password-strength__label--${lvl.cls}`;
+  });
+
   document.getElementById("registerBtn")?.addEventListener("click", async (e) => {
     e.preventDefault();
     const msg = document.getElementById("registerMsg");
@@ -327,6 +371,17 @@ function setupAuthUI() {
     try {
       const email = document.getElementById("registerEmail").value.trim();
       const password = document.getElementById("registerPassword").value;
+
+      // Client-side validation
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        msg.textContent = "Please enter a valid email address.";
+        return;
+      }
+      if (password.length < 8) {
+        msg.textContent = "Password must be at least 8 characters.";
+        return;
+      }
+
       const data = await apiFetch("/api/auth/register", {
         method: "POST",
         body: JSON.stringify({ email, password }),
@@ -414,7 +469,7 @@ async function syncFromCloud() {
   const defaults = {
     businessName: "", contactName: "", address1: "", address2: "",
     town: "", postcode: "", phone: "", email: "", website: "",
-    vatNumber: "", showLineItemsOnQuote: false, defaultNotes: "",
+    vatNumber: "", showLineItemsOnQuote: false, defaultNotes: "", logoUrl: "",
   };
   const savedBP = cloud.businessProfile && typeof cloud.businessProfile === "object"
     ? cloud.businessProfile : null;
@@ -508,6 +563,7 @@ function setupTabs() {
 // BUSINESS PROFILE
 //------------------------------------------------------
 function applyBusinessProfileToUI() {
+  safeSetValue("bpLogoUrl", businessProfile.logoUrl);
   safeSetValue("bpBusinessName", businessProfile.businessName);
   safeSetValue("bpContactName", businessProfile.contactName);
   safeSetValue("bpAddress1", businessProfile.address1);
@@ -537,6 +593,7 @@ function applyBusinessProfileToUI() {
 
 async function saveBusinessProfile() {
   businessProfile = {
+    logoUrl: getValue("bpLogoUrl"),
     businessName: getValue("bpBusinessName"),
     contactName: getValue("bpContactName"),
     address1: getValue("bpAddress1"),
@@ -1368,7 +1425,9 @@ async function saveCustomer() {
 
   if (!isSignedIn()) { requireAuth(); return; }
 
-  const record = { name, jobRef, rooms, timestamp: Date.now() };
+  // Ensure this customer has a stable quote number
+  if (!window.currentQuoteNumber) window.currentQuoteNumber = generateQuoteNumber();
+  const record = { name, jobRef, rooms, quoteNumber: window.currentQuoteNumber, timestamp: Date.now() };
 
   // OPTIMISED: use cache, no re-fetch
   const cloud = await getCloudData();
@@ -1391,7 +1450,7 @@ function autoUpdateCurrentCustomer() {
   if (!name || !isSignedIn()) return;
 
   const jobRef = document.getElementById("jobRef").value.trim();
-  const record = { name, jobRef, rooms, timestamp: Date.now() };
+  const record = { name, jobRef, rooms, quoteNumber: window.currentQuoteNumber || null, timestamp: Date.now() };
 
   if (!_cloudCache) _cloudCache = {};
   const customers = Array.isArray(_cloudCache.customers) ? _cloudCache.customers : [];
@@ -1412,28 +1471,42 @@ function renderSavedCustomersList(cloud) {
   if (!isSignedIn() || !cloud) return;
 
   const customers = Array.isArray(cloud.customers) ? cloud.customers : [];
+  const query = (document.getElementById("customerSearch")?.value || "").trim().toLowerCase();
 
-  customers
+  const filtered = customers
     .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
-    .forEach((c) => {
-      const li = document.createElement("li");
-      const text = document.createElement("span");
-      const del = document.createElement("span");
-
-      text.textContent = c.jobRef ? `${c.name} (${c.jobRef})` : c.name;
-      del.textContent = "✕";
-      del.className = "delete-btn";
-
-      text.addEventListener("click", () => loadCustomer(c));
-      del.addEventListener("click", (e) => {
-        e.stopPropagation();
-        deleteCustomer(c.name);
-      });
-
-      li.appendChild(text);
-      li.appendChild(del);
-      list.appendChild(li);
+    .filter((c) => {
+      if (!query) return true;
+      return (
+        c.name.toLowerCase().includes(query) ||
+        (c.jobRef && c.jobRef.toLowerCase().includes(query))
+      );
     });
+
+  if (!filtered.length && customers.length > 0 && query) {
+    list.innerHTML = `<li class="no-results muted">No customers match "${escapeHtml(query)}"</li>`;
+    return;
+  }
+
+  filtered.forEach((c) => {
+    const li = document.createElement("li");
+    const text = document.createElement("span");
+    const del = document.createElement("span");
+
+    text.textContent = c.jobRef ? `${c.name} (${c.jobRef})` : c.name;
+    del.textContent = "✕";
+    del.className = "delete-btn";
+
+    text.addEventListener("click", () => loadCustomer(c));
+    del.addEventListener("click", (e) => {
+      e.stopPropagation();
+      deleteCustomer(c.name);
+    });
+
+    li.appendChild(text);
+    li.appendChild(del);
+    list.appendChild(li);
+  });
 }
 
 function loadCustomer(c) {
@@ -1441,6 +1514,9 @@ function loadCustomer(c) {
 
   document.getElementById("customerName").value = c.name || "";
   document.getElementById("jobRef").value = c.jobRef || "";
+
+  // Restore the stable quote number for this customer
+  window.currentQuoteNumber = c.quoteNumber || null;
 
   rooms = Array.isArray(c.rooms) ? c.rooms : [];
   activeRoomId = rooms.length ? rooms[0].id : null;
@@ -1547,6 +1623,7 @@ function buildBusinessQuoteHeader() {
   if (!businessProfile) return "";
 
   const {
+    logoUrl,
     businessName,
     contactName,
     address1,
@@ -1559,8 +1636,13 @@ function buildBusinessQuoteHeader() {
     vatNumber
   } = businessProfile;
 
+  const logoHtml = logoUrl
+    ? `<div class="quote-logo"><img src="${escapeHtml(logoUrl)}" alt="${escapeHtml(businessName || "")}" class="quote-logo__img"></div>`
+    : "";
+
   return `
     <div class="quote-header">
+      ${logoHtml}
       <div class="quote-business">
         <strong>${escapeHtml(businessName || "")}</strong><br>
         ${contactName ? escapeHtml(contactName) + "<br>" : ""}
