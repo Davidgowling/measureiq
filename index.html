@@ -30,7 +30,6 @@
     <div class="auth-screen__right">
       <div class="auth-screen__form-wrap">
 
-        <!-- Tab toggle -->
         <div class="auth-screen__tabs">
           <button class="auth-tab active" data-auth-tab="login">Sign in</button>
           <button class="auth-tab" data-auth-tab="register">Create account</button>
@@ -91,230 +90,243 @@
        ============================================================ -->
   <div id="appMain" style="display:none;">
 
+    <!-- TOP BAR -->
     <div class="topbar no-print">
       <div class="brand">
         <img src="assets/logo-white-web.png" alt="MeasureIQ" class="topbar__logo" />
       </div>
       <div class="auth">
+        <span id="saveStatus" class="save-status"></span>
         <span id="authStatus" class="muted">Not signed in</span>
         <button id="logoutBtn" class="btn danger" style="display:none;">Logout</button>
       </div>
     </div>
 
-    <div class="layout">
+    <!-- PRIMARY NAVIGATION -->
+    <nav class="primary-nav no-print" id="primaryNav">
+      <button class="primary-nav__btn active" data-page="jobs">Jobs</button>
+      <button class="primary-nav__btn" data-page="accessories">Accessories</button>
+      <button class="primary-nav__btn" data-page="profile">Business Profile</button>
+    </nav>
 
-      <!-- LEFT COLUMN -->
-      <div class="project no-print">
-        <h2>Customer Details</h2>
+    <!-- ======================================================
+         PAGE: JOBS (Customer sidebar + Calculator + Quote)
+         ====================================================== -->
+    <div id="pageJobs" class="page-view">
+      <div class="layout">
 
-        <label for="customerName">Customer Name</label>
-        <input type="text" id="customerName" placeholder="Enter Name Here" />
+        <!-- LEFT COLUMN: Customer Details + Rooms -->
+        <div class="project no-print">
+          <h2>Customer Details</h2>
 
-        <label for="jobRef">Job Reference</label>
-        <input type="text" id="jobRef" placeholder="Tip: First line of address" />
+          <label for="customerName">Customer Name</label>
+          <input type="text" id="customerName" placeholder="Enter Name Here" />
 
-        <div class="customer-actions">
-          <button id="saveCustomerBtn" class="btn primary">Save Customer</button>
-          <button id="newCustomerBtn" class="btn secondary">New Customer</button>
-        </div>
+          <label for="jobRef">Job Reference</label>
+          <input type="text" id="jobRef" placeholder="Tip: First line of address" />
 
-        <h3>Saved Customers</h3>
-        <input type="search" id="customerSearch" placeholder="Search customers…" class="customer-search" aria-label="Search saved customers" />
-        <ul id="savedCustomersList" class="saved-list"></ul>
-
-        <h2>Rooms</h2>
-        <button id="addRoomBtn" class="btn secondary full-width">+ Add Room</button>
-        <div id="roomList" class="room-list-vertical"></div>
-      </div>
-
-      <!-- RIGHT COLUMN -->
-      <div class="right-column">
-
-        <div class="hamburger-nav no-print">
-          <button id="hamburgerBtn" class="hamburger-btn" aria-label="Menu">
-            <span></span><span></span><span></span>
-          </button>
-          <span id="currentTabLabel" class="current-tab-label">Room Calculator</span>
-          <div id="hamburgerMenu" class="hamburger-menu" style="display:none;">
-            <button class="hamburger-item active" data-tab="calculatorSection">🏠 Room Calculator</button>
-            <button class="hamburger-item" data-tab="accessoriesSection">🔧 Accessories Pricing</button>
-            <button class="hamburger-item" data-tab="quoteSection">📄 Quote Builder</button>
-            <button class="hamburger-item" data-tab="businessProfileSection">👤 Business Profile</button>
+          <div class="customer-actions">
+            <button id="saveCustomerBtn" class="btn primary">Save Customer</button>
+            <button id="newCustomerBtn" class="btn secondary">New Customer</button>
           </div>
+
+          <h3>Saved Customers</h3>
+          <input type="search" id="customerSearch" placeholder="Search customers…" class="customer-search" aria-label="Search saved customers" />
+          <ul id="savedCustomersList" class="saved-list"></ul>
+
+          <h2>Rooms</h2>
+          <button id="addRoomBtn" class="btn secondary full-width">+ Add Room</button>
+          <div id="roomList" class="room-list-vertical"></div>
         </div>
 
-        <!-- TAB: ROOM CALCULATOR -->
-        <div id="calculatorSection" class="tab-panel">
-          <div class="calculator" id="roomCalculator">
-            <div id="noRoomMessage" class="muted">
-              Add a room on the left to begin.
-            </div>
+        <!-- RIGHT COLUMN: Calculator + Quote -->
+        <div class="right-column">
 
-            <div id="roomForm" style="display:none;">
+          <!-- Sub-tabs -->
+          <div class="subtabs no-print">
+            <button class="subtab active" data-tab="calculatorSection">Room Calculator</button>
+            <button class="subtab" data-tab="quoteSection">Quote Builder</button>
+          </div>
 
-              <div class="room-header">
-                <h2 id="roomTitle">No room selected</h2>
-                <div class="room-actions">
-                  <button id="editRoomBtn" class="btn secondary">Rename</button>
-                  <button id="deleteRoomBtn" class="btn danger">Delete</button>
-                </div>
+          <!-- TAB: ROOM CALCULATOR -->
+          <div id="calculatorSection" class="tab-panel">
+            <div class="calculator" id="roomCalculator">
+              <div id="noRoomMessage" class="muted">
+                Add a room on the left to begin.
               </div>
 
-              <!-- ROOM DIMENSIONS -->
-              <div class="panel" style="margin-top:10px;">
-                <h3>Room Dimensions</h3>
+              <div id="roomForm" style="display:none;">
 
-                <label for="length">Room Length (m)</label>
-                <input type="number" id="length" step="0.01" min="0" />
-
-                <label for="widthInput" id="widthLabel">Room Width (m)</label>
-                <input type="number" id="widthInput" step="0.01" min="0" />
-
-                <div class="muted tiny" style="margin-top:8px;">
-                  Room area auto-calculates from Length × Width and is used as the default Qty for sqm-based line items (editable per line).
-                </div>
-              </div>
-
-              <!-- LINE ITEMS GRID -->
-              <div class="panel" style="margin-top:10px;">
-                <div class="line-items-header">
-                  <h3 style="margin:0;">Room Line Items</h3>
-                  <div class="muted tiny">
-                    Each line shows Qty + Unit Price so you can see exactly how totals are built. Override anytime.
+                <div class="room-header">
+                  <h2 id="roomTitle">No room selected</h2>
+                  <div class="room-actions">
+                    <button id="editRoomBtn" class="btn secondary">Rename</button>
+                    <button id="deleteRoomBtn" class="btn danger">Delete</button>
                   </div>
                 </div>
 
-                <div id="roomLineItems"></div>
+                <div class="panel" style="margin-top:10px;">
+                  <h3>Room Dimensions</h3>
 
-                <div class="line-items-actions no-print">
-                  <button id="addCustomLineBtn" class="btn secondary">+ Add custom line</button>
+                  <label for="length">Room Length (m)</label>
+                  <input type="number" id="length" step="0.01" min="0" />
+
+                  <label for="widthInput" id="widthLabel">Room Width (m)</label>
+                  <input type="number" id="widthInput" step="0.01" min="0" />
+
+                  <div class="muted tiny" style="margin-top:8px;">
+                    Room area auto-calculates from Length × Width and is used as the default Qty for sqm-based line items (editable per line).
+                  </div>
+                </div>
+
+                <div class="panel" style="margin-top:10px;">
+                  <div class="line-items-header">
+                    <h3 style="margin:0;">Room Line Items</h3>
+                    <div class="muted tiny">
+                      Each line shows Qty + Unit Price so you can see exactly how totals are built. Override anytime.
+                    </div>
+                  </div>
+
+                  <div id="roomLineItems"></div>
+
+                  <div class="line-items-actions no-print">
+                    <button id="addCustomLineBtn" class="btn secondary">+ Add custom line</button>
+                  </div>
+                </div>
+
+                <button id="calculateBtn" class="btn primary full-width">Calculate &amp; Save</button>
+                <div id="roomSavedMsg" class="small-note"></div>
+
+                <div id="result" class="result"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB: QUOTE BUILDER -->
+          <div id="quoteSection" class="tab-panel" style="display:none;">
+            <div id="quoteBuilder" class="summary">
+              <h2>Customer Quote</h2>
+
+              <div class="quote-controls no-print">
+                <div class="quote-toggle">
+                  <label>
+                    <input type="checkbox" id="quoteShowLineItems">
+                    Show line items (per room) on customer quote
+                  </label>
                 </div>
               </div>
 
-              <button id="calculateBtn" class="btn primary full-width">Calculate &amp; Save</button>
-              <div id="roomSavedMsg" class="small-note"></div>
+              <div id="quoteContent" class="quote-content"></div>
 
-              <div id="result" class="result"></div>
+              <div class="quote-notes no-print">
+                <label for="quoteNotes">Notes / Terms</label>
+                <textarea id="quoteNotes" rows="4" placeholder="e.g. Quote valid for 30 days, subfloor preparation excluded unless stated..."></textarea>
+              </div>
+
+              <button id="quotePrintBtn" class="btn secondary no-print">Print / PDF Customer Quote</button>
             </div>
           </div>
+
         </div>
-
-        <!-- TAB: ACCESSORIES PRICING -->
-        <div id="accessoriesSection" class="tab-panel" style="display:none;">
-          <div class="panel accessories-panel">
-            <h2>Accessories Pricing</h2>
-            <p class="muted">
-              Set your default unit prices here (ex VAT). These become the default Unit Price in each room,
-              but can be overridden per room line.
-            </p>
-
-            <div id="accessoriesPricingList"></div>
-
-            <button id="saveAccessoriesBtn" class="btn primary">Save All Accessories</button>
-            <span id="accessoriesSavedMsg" class="small-note"></span>
-          </div>
-        </div>
-
-        <!-- TAB: QUOTE BUILDER -->
-        <div id="quoteSection" class="tab-panel" style="display:none;">
-          <div id="quoteBuilder" class="summary">
-            <h2>Customer Quote</h2>
-
-            <div class="quote-controls no-print">
-              <div class="quote-toggle">
-                <label>
-                  <input type="checkbox" id="quoteShowLineItems">
-                  Show line items (per room) on customer quote
-                </label>
-              </div>
-            </div>
-
-            <div id="quoteContent" class="quote-content"></div>
-
-            <div class="quote-notes no-print">
-              <label for="quoteNotes">Notes / Terms</label>
-              <textarea id="quoteNotes" rows="4" placeholder="e.g. Quote valid for 30 days, subfloor preparation excluded unless stated..."></textarea>
-            </div>
-
-            <button id="quotePrintBtn" class="btn secondary no-print">Print / PDF Customer Quote</button>
-          </div>
-        </div>
-
-        <!-- TAB: BUSINESS PROFILE -->
-        <div id="businessProfileSection" class="tab-panel" style="display:none;">
-          <div class="panel business-panel">
-            <h2>Business Profile</h2>
-            <p class="muted">
-              These details appear on your customer quotes. They are saved in the cloud to your account.
-            </p>
-
-            <div class="bp-grid">
-              <div>
-                  <label for="bpLogoUrl">Logo URL (optional)</label>
-                  <input type="text" id="bpLogoUrl" placeholder="https://yourdomain/logo.png">
-              </div>
-
-              <div>
-                <label for="bpBusinessName">Business Name</label>
-                <input type="text" id="bpBusinessName" placeholder="e.g. ABC Flooring Ltd" />
-              </div>
-              <div>
-                <label for="bpContactName">Contact Name</label>
-                <input type="text" id="bpContactName" placeholder="Your name" />
-              </div>
-              <div>
-                <label for="bpAddress1">Address Line 1</label>
-                <input type="text" id="bpAddress1" />
-              </div>
-              <div>
-                <label for="bpAddress2">Address Line 2</label>
-                <input type="text" id="bpAddress2" />
-              </div>
-              <div>
-                <label for="bpTown">Town / City</label>
-                <input type="text" id="bpTown" />
-              </div>
-              <div>
-                <label for="bpPostcode">Postcode</label>
-                <input type="text" id="bpPostcode" />
-              </div>
-              <div>
-                <label for="bpPhone">Phone</label>
-                <input type="text" id="bpPhone" />
-              </div>
-              <div>
-                <label for="bpEmail">Email</label>
-                <input type="email" id="bpEmail" />
-              </div>
-              <div>
-                <label for="bpWebsite">Website</label>
-                <input type="text" id="bpWebsite" />
-              </div>
-              <div>
-                <label for="bpVatNumber">VAT Number (optional)</label>
-                <input type="text" id="bpVatNumber" />
-              </div>
-              <div class="bp-checkbox">
-                <label>
-                  <input type="checkbox" id="bpShowLineItems" />
-                  Show line items on customer quote by default
-                </label>
-              </div>
-            </div>
-
-            <div class="bp-notes">
-              <label for="bpDefaultNotes">Default Notes / Terms</label>
-              <textarea id="bpDefaultNotes" rows="4" placeholder="Standard terms you want to appear on every quote."></textarea>
-            </div>
-
-            <button id="saveBusinessProfileBtn" class="btn primary">Save Business Profile</button>
-            <span id="businessSavedMsg" class="small-note"></span>
-          </div>
-        </div>
-
       </div>
     </div>
 
+    <!-- ======================================================
+         PAGE: ACCESSORIES PRICING (standalone, full-width)
+         ====================================================== -->
+    <div id="pageAccessories" class="page-view" style="display:none;">
+      <div class="page-container">
+        <div class="panel accessories-panel">
+          <h2>Accessories Pricing</h2>
+          <p class="muted">
+            Set your default unit prices here (ex VAT). These become the default Unit Price in each room,
+            but can be overridden per room line.
+          </p>
+
+          <div id="accessoriesPricingList"></div>
+
+          <button id="saveAccessoriesBtn" class="btn primary">Save All Accessories</button>
+          <span id="accessoriesSavedMsg" class="small-note"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================================================
+         PAGE: BUSINESS PROFILE (standalone, full-width)
+         ====================================================== -->
+    <div id="pageProfile" class="page-view" style="display:none;">
+      <div class="page-container">
+        <div class="panel business-panel">
+          <h2>Business Profile</h2>
+          <p class="muted">
+            These details appear on your customer quotes. They are saved in the cloud to your account.
+          </p>
+
+          <div class="bp-grid">
+            <div>
+              <label for="bpLogoUrl">Logo URL (optional)</label>
+              <input type="text" id="bpLogoUrl" placeholder="https://yourdomain/logo.png">
+            </div>
+            <div>
+              <label for="bpBusinessName">Business Name</label>
+              <input type="text" id="bpBusinessName" placeholder="e.g. ABC Flooring Ltd" />
+            </div>
+            <div>
+              <label for="bpContactName">Contact Name</label>
+              <input type="text" id="bpContactName" placeholder="Your name" />
+            </div>
+            <div>
+              <label for="bpAddress1">Address Line 1</label>
+              <input type="text" id="bpAddress1" />
+            </div>
+            <div>
+              <label for="bpAddress2">Address Line 2</label>
+              <input type="text" id="bpAddress2" />
+            </div>
+            <div>
+              <label for="bpTown">Town / City</label>
+              <input type="text" id="bpTown" />
+            </div>
+            <div>
+              <label for="bpPostcode">Postcode</label>
+              <input type="text" id="bpPostcode" />
+            </div>
+            <div>
+              <label for="bpPhone">Phone</label>
+              <input type="text" id="bpPhone" />
+            </div>
+            <div>
+              <label for="bpEmail">Email</label>
+              <input type="email" id="bpEmail" />
+            </div>
+            <div>
+              <label for="bpWebsite">Website</label>
+              <input type="text" id="bpWebsite" />
+            </div>
+            <div>
+              <label for="bpVatNumber">VAT Number (optional)</label>
+              <input type="text" id="bpVatNumber" />
+            </div>
+            <div class="bp-checkbox">
+              <label>
+                <input type="checkbox" id="bpShowLineItems" />
+                Show line items on customer quote by default
+              </label>
+            </div>
+          </div>
+
+          <div class="bp-notes">
+            <label for="bpDefaultNotes">Default Notes / Terms</label>
+            <textarea id="bpDefaultNotes" rows="4" placeholder="Standard terms you want to appear on every quote."></textarea>
+          </div>
+
+          <button id="saveBusinessProfileBtn" class="btn primary">Save Business Profile</button>
+          <span id="businessSavedMsg" class="small-note"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- STICKY FOOTER (Jobs page only) -->
     <div id="stickyFooter" class="sticky-footer no-print">
       <div class="footer-left">
         <span id="footerRoomCount">0 rooms</span>
@@ -323,7 +335,7 @@
         <strong id="footerTotal">£0.00 ex VAT</strong>
       </div>
       <div class="footer-right">
-        <button class="btn secondary" onclick="renderQuote()">Quote</button>
+        <button class="btn secondary" onclick="navigateToQuote()">Quote</button>
         <button class="btn primary" onclick="saveCustomer()">Save</button>
       </div>
     </div>
