@@ -248,6 +248,7 @@ app.post("/api/save", authenticate, async (req, res) => {
 
 // --------------------------------------------------
 app.get("*", (req, res) => {
+  res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
   res.sendFile(path.join(__dirname, "..", "index.html"));
 });
 
