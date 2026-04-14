@@ -67,6 +67,12 @@
 
           <label for="registerPassword">Password</label>
           <input id="registerPassword" type="password" placeholder="Minimum 8 characters" autocomplete="new-password" />
+          <div class="password-strength" id="passwordStrength" aria-live="polite">
+            <div class="password-strength__bar">
+              <div class="password-strength__fill" id="passwordStrengthFill"></div>
+            </div>
+            <span class="password-strength__label" id="passwordStrengthLabel"></span>
+          </div>
 
           <button id="registerBtn" class="btn primary full-width">Create account</button>
 
@@ -113,6 +119,7 @@
         </div>
 
         <h3>Saved Customers</h3>
+        <input type="search" id="customerSearch" placeholder="Search customers…" class="customer-search" aria-label="Search saved customers" />
         <ul id="savedCustomersList" class="saved-list"></ul>
 
         <h2>Rooms</h2>

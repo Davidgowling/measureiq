@@ -6,6 +6,7 @@ const path = require("path");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const cors = require("cors");
+const rateLimit = require("express-rate-limit");
 const { Pool } = require("pg");
 const { Resend } = require("resend");
 
@@ -30,6 +31,17 @@ const pool = new Pool({
 app.use(express.json());
 app.use(cors());
 app.use(express.static(path.join(__dirname, "..")));
+
+// --------------------------------------------------
+// Rate limiting (auth endpoints)
+// --------------------------------------------------
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many attempts. Please try again in 15 minutes." },
+});
 
 // --------------------------------------------------
 // DB INIT
@@ -75,8 +87,15 @@ function authenticate(req, res, next) {
 // --------------------------------------------------
 // AUTH
 // --------------------------------------------------
-app.post("/api/auth/register", async (req, res) => {
+app.post("/api/auth/register", authLimiter, async (req, res) => {
   const { email, password } = req.body;
+
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email))) {
+    return res.status(400).json({ error: "A valid email address is required." });
+  }
+  if (!password || String(password).length < 8) {
+    return res.status(400).json({ error: "Password must be at least 8 characters." });
+  }
 
   const hash = await bcrypt.hash(password, 10);
   const id = crypto.randomUUID();
@@ -84,26 +103,30 @@ app.post("/api/auth/register", async (req, res) => {
   try {
     await pool.query(
       "INSERT INTO users (id, email, password) VALUES ($1,$2,$3)",
-      [id, email, hash]
+      [id, email.toLowerCase().trim(), hash]
     );
-    const token = jwt.sign({ id, email }, JWT_SECRET);
+    const token = jwt.sign({ id, email }, JWT_SECRET, { expiresIn: "7d" });
     res.json({ token });
   } catch {
     res.status(400).json({ error: "User already exists" });
   }
 });
 
-app.post("/api/auth/login", async (req, res) => {
+app.post("/api/auth/login", authLimiter, async (req, res) => {
   const { email, password } = req.body;
 
-  const r = await pool.query("SELECT * FROM users WHERE email=$1", [email]);
+  if (!email || !password) {
+    return res.status(400).json({ error: "Email and password are required." });
+  }
+
+  const r = await pool.query("SELECT * FROM users WHERE email=$1", [String(email).toLowerCase().trim()]);
   const user = r.rows[0];
   if (!user) return res.status(401).json({ error: "Invalid login" });
 
   const ok = await bcrypt.compare(password, user.password);
   if (!ok) return res.status(401).json({ error: "Invalid login" });
 
-  const token = jwt.sign({ id: user.id, email }, JWT_SECRET);
+  const token = jwt.sign({ id: user.id, email }, JWT_SECRET, { expiresIn: "7d" });
   res.json({ token });
 });
 
@@ -114,7 +137,7 @@ app.get("/api/me", authenticate, (req, res) => {
 // --------------------------------------------------
 // FORGOT PASSWORD (NEW)
 // --------------------------------------------------
-app.post("/api/auth/forgot-password", async (req, res) => {
+app.post("/api/auth/forgot-password", authLimiter, async (req, res) => {
   const { email } = req.body;
 
   const r = await pool.query("SELECT id FROM users WHERE email=$1", [email]);
@@ -147,8 +170,12 @@ app.post("/api/auth/forgot-password", async (req, res) => {
   res.json({ ok: true });
 });
 
-app.post("/api/auth/reset-password", async (req, res) => {
+app.post("/api/auth/reset-password", authLimiter, async (req, res) => {
   const { token, password } = req.body;
+
+  if (!password || String(password).length < 8) {
+    return res.status(400).json({ error: "Password must be at least 8 characters." });
+  }
 
   const r = await pool.query(
     "SELECT id FROM users WHERE reset_token=$1 AND reset_token_expires > NOW()",
