@@ -845,14 +845,22 @@ textarea:focus {
   flex-direction: column;
 }
 
-/* Sticky job header bar */
+/* Job header — column layout so nav and customer info stack cleanly */
 .job-header {
   display: flex;
-  align-items: center;
-  gap: 14px;
+  flex-direction: column;
+  gap: 10px;
   padding: 12px 0 16px;
   border-bottom: 1px solid var(--dms-border-lt);
   margin-bottom: 20px;
+}
+
+/* Top row: back button + save */
+.job-header__nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
 }
 
 /* ← Customers back button */
@@ -875,13 +883,11 @@ textarea:focus {
   border-color: var(--dms-dark);
 }
 
-/* Inline editable name + job ref */
+/* Customer info — full width column */
 .job-identity {
-  flex: 1;
-  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 4px;
 }
 
 .job-name-input {
@@ -1567,13 +1573,8 @@ textarea:focus {
     flex: 1;
   }
 
-  /* Job header on mobile: stack vertically */
-  .job-header {
-    flex-wrap: wrap;
-    gap: 10px;
-  }
 
-  .job-identity { width: 100%; order: -1; }
+
   .btn-back { font-size: 0.78rem; padding: 6px 10px; }
 
   .quote-controls {
