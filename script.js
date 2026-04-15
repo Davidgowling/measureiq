@@ -5,6 +5,7 @@ let rooms = [];
 let activeRoomId = null;
 let SYSTEM_ACCESSORIES = [];
 let accessoriesDefs = []; // global list with default prices
+let customAccessories = []; // user-defined accessories
 let businessProfile = null;
 let authUser = null;
 
@@ -491,6 +492,7 @@ logoutBtn?.addEventListener("click", () => {
   activeRoomId = null;
   businessProfile = null;
   accessoriesDefs = [];
+  customAccessories = [];
 
   // ✅ Clear the UI without opening any modals
   clearJobState();
@@ -562,8 +564,9 @@ async function syncFromCloud() {
   // --- Accessory Definitions ---
   const userPrices = cloud.accessoryPrices && typeof cloud.accessoryPrices === "object"
     ? cloud.accessoryPrices : {};
+  customAccessories = Array.isArray(cloud.customAccessories) ? cloud.customAccessories : [];
   if (SYSTEM_ACCESSORIES.length) {
-    accessoriesDefs = buildAccessories(SYSTEM_ACCESSORIES, userPrices);
+    accessoriesDefs = buildAccessories(SYSTEM_ACCESSORIES, userPrices, customAccessories);
     renderAccessoriesPricingPanel();
   }
 
@@ -884,39 +887,69 @@ function loadRoom(id) {
 //------------------------------------------------------
 // ACCESSORY DEFINITIONS (GLOBAL DEFAULT PRICES)
 //------------------------------------------------------
-function buildAccessories(system, userPrices = {}) {
-  return system.map((acc) => ({
+function buildAccessories(system, userPrices = {}, customAccs = []) {
+  const systemDefs = system.map((acc) => ({
     id: acc.id,
     name: acc.name,
     unit: acc.unit,
     category: acc.category || "Other",
     price: Number(userPrices[acc.id]) || 0,
+    isCustom: false,
   }));
+  const customDefs = customAccs.map((acc) => ({
+    id: acc.id,
+    name: acc.name,
+    unit: acc.unit || "item",
+    category: acc.category || "Custom",
+    price: Number(acc.price) || 0,
+    isCustom: true,
+  }));
+  return [...systemDefs, ...customDefs];
 }
 
 async function saveAccessoryDefinitions() {
   const container = document.getElementById("accessoriesPricingList");
   if (!container) return;
 
+  // Collect system accessory prices
   const prices = {};
-
-  container.querySelectorAll("tbody tr[data-id]").forEach((row) => {
+  container.querySelectorAll("tbody tr[data-id]:not([data-custom])").forEach((row) => {
     const id = row.getAttribute("data-id");
     const priceInput = document.getElementById(`accDefPrice_${id}`);
-    prices[id] = parseFloat(priceInput.value) || 0;
+    prices[id] = parseFloat(priceInput?.value) || 0;
   });
+
+  // Collect custom accessories from editable rows
+  const newCustom = [];
+  container.querySelectorAll("tbody tr[data-custom='true']").forEach((row) => {
+    const id = row.getAttribute("data-id");
+    const nameEl = row.querySelector(".acc-custom-name");
+    const unitEl = row.querySelector(".acc-custom-unit");
+    const priceEl = document.getElementById(`accDefPrice_${id}`);
+    const name = nameEl?.value?.trim();
+    if (name) {
+      newCustom.push({
+        id,
+        name,
+        unit: unitEl?.value || "item",
+        category: "Custom",
+        price: parseFloat(priceEl?.value) || 0,
+      });
+    }
+  });
+  customAccessories = newCustom;
 
   if (!isSignedIn()) { requireAuth(); return; }
 
-  // OPTIMISED: merge into cache and flush immediately (no re-fetch)
   markCloudDirty("accessoryPrices", prices);
+  markCloudDirty("customAccessories", customAccessories);
   await flushSave();
 
   const msg = document.getElementById("accessoriesSavedMsg");
   msg.textContent = "Saved";
   setTimeout(() => (msg.textContent = ""), 1500);
 
-  accessoriesDefs = buildAccessories(SYSTEM_ACCESSORIES, prices);
+  accessoriesDefs = buildAccessories(SYSTEM_ACCESSORIES, prices, customAccessories);
 
   // Update rooms that haven't overridden unit prices (we keep overrides intact)
   rooms.forEach((r) => {
@@ -939,16 +972,22 @@ async function saveAccessoryDefinitions() {
   renderQuote();
 }
 
+function unitSelectHtml(id, selected) {
+  const units = ["sqm", "lm", "item", "each", "box"];
+  const opts = units.map(u => `<option value="${u}"${u === selected ? " selected" : ""}>${unitLabel(u) || u}</option>`).join("");
+  return `<select class="acc-custom-unit" aria-label="Unit">${opts}</select>`;
+}
+
 function renderAccessoriesPricingPanel() {
   const container = document.getElementById("accessoriesPricingList");
   if (!container) return;
 
-  if (!accessoriesDefs.length) {
-    container.innerHTML = `<p class="muted">No accessories configured.</p>`;
-    return;
-  }
+  // Separate system and custom defs
+  const systemDefs = accessoriesDefs.filter(d => !d.isCustom);
+  const customDefs  = accessoriesDefs.filter(d => d.isCustom);
 
-  const grouped = accessoriesDefs.reduce((acc, def) => {
+  // Group system accessories by category
+  const grouped = systemDefs.reduce((acc, def) => {
     const cat = def.category || "Other";
     if (!acc[cat]) acc[cat] = [];
     acc[cat].push(def);
@@ -961,37 +1000,33 @@ function renderAccessoriesPricingPanel() {
     return a.localeCompare(b);
   });
 
-  const rowsHtml = orderedCategories
-    .map((category) => {
-      const defs = grouped[category];
+  const systemRowsHtml = orderedCategories.map((category) => {
+    const defs = grouped[category];
+    const headerRow = `<tr class="category-row"><td colspan="4"><strong>${escapeHtml(category)}</strong></td></tr>`;
+    const rows = defs.map((def) => `
+      <tr data-id="${def.id}">
+        <td>${escapeHtml(def.name)}</td>
+        <td>${unitLabel(def.unit)}</td>
+        <td>
+          <input type="number" id="accDefPrice_${def.id}" step="0.01" min="0" value="${Number(def.price) || 0}">
+        </td>
+        <td></td>
+      </tr>`).join("");
+    return headerRow + rows;
+  }).join("");
 
-      const headerRow = `
-        <tr class="category-row">
-          <td colspan="3"><strong>${escapeHtml(category)}</strong></td>
-        </tr>
-      `;
+  // Custom accessory rows (editable)
+  const customHeaderRow = customDefs.length
+    ? `<tr class="category-row"><td colspan="4"><strong>My Custom Accessories</strong></td></tr>`
+    : "";
 
-      const rows = defs
-        .map(
-          (def) => `
-        <tr data-id="${def.id}">
-          <td>${escapeHtml(def.name)}</td>
-          <td>${unitLabel(def.unit)}</td>
-          <td>
-            <input type="number"
-              id="accDefPrice_${def.id}"
-              step="0.01"
-              min="0"
-              value="${Number(def.price) || 0}">
-          </td>
-        </tr>
-      `
-        )
-        .join("");
-
-      return headerRow + rows;
-    })
-    .join("");
+  const customRowsHtml = customDefs.map((def) => `
+    <tr data-id="${def.id}" data-custom="true">
+      <td><input type="text" class="acc-custom-name" value="${escapeHtml(def.name)}" placeholder="Name" /></td>
+      <td>${unitSelectHtml(def.id, def.unit)}</td>
+      <td><input type="number" id="accDefPrice_${def.id}" step="0.01" min="0" value="${Number(def.price) || 0}"></td>
+      <td><button class="btn-acc-delete" onclick="deleteCustomAccessoryRow(this)" aria-label="Delete">✕</button></td>
+    </tr>`).join("");
 
   container.innerHTML = `
     <table class="summary-table accessories-table">
@@ -1000,13 +1035,56 @@ function renderAccessoriesPricingPanel() {
           <th>Name</th>
           <th>Unit</th>
           <th>Default Price (£ ex VAT)</th>
+          <th></th>
         </tr>
       </thead>
-      <tbody>
-        ${rowsHtml}
+      <tbody id="accessoriesTbody">
+        ${systemRowsHtml}
+        ${customHeaderRow}
+        ${customRowsHtml}
       </tbody>
     </table>
+    <button class="btn secondary" id="addCustomAccessoryBtn" style="margin-top:12px;">+ Add accessory</button>
   `;
+
+  document.getElementById("addCustomAccessoryBtn").addEventListener("click", addCustomAccessoryRow);
+}
+
+function addCustomAccessoryRow() {
+  const tbody = document.getElementById("accessoriesTbody");
+  if (!tbody) return;
+
+  // Ensure custom header row exists
+  if (!tbody.querySelector("tr[data-custom='true']") && !tbody.querySelector(".custom-header-row")) {
+    const hdr = document.createElement("tr");
+    hdr.className = "category-row custom-header-row";
+    hdr.innerHTML = `<td colspan="4"><strong>My Custom Accessories</strong></td>`;
+    tbody.appendChild(hdr);
+  }
+
+  const id = `custom_${Date.now()}`;
+  const tr = document.createElement("tr");
+  tr.setAttribute("data-id", id);
+  tr.setAttribute("data-custom", "true");
+  tr.innerHTML = `
+    <td><input type="text" class="acc-custom-name" placeholder="e.g. Threshold strip" /></td>
+    <td>${unitSelectHtml(id, "item")}</td>
+    <td><input type="number" id="accDefPrice_${id}" step="0.01" min="0" value="0"></td>
+    <td><button class="btn-acc-delete" onclick="deleteCustomAccessoryRow(this)" aria-label="Delete">✕</button></td>
+  `;
+  tbody.appendChild(tr);
+  tr.querySelector(".acc-custom-name").focus();
+}
+
+function deleteCustomAccessoryRow(btn) {
+  const row = btn.closest("tr");
+  if (!row) return;
+  row.remove();
+  // Remove orphaned custom header if no custom rows remain
+  const tbody = document.getElementById("accessoriesTbody");
+  if (tbody && !tbody.querySelector("tr[data-custom='true']")) {
+    tbody.querySelector(".custom-header-row")?.remove();
+  }
 }
 
 //------------------------------------------------------
