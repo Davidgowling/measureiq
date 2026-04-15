@@ -286,6 +286,11 @@ function setAuthUI() {
 }
 
 function showHomePage() {
+  // Close any open modals before showing homepage
+  ["newCustModal", "roomNameModal"].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = "none";
+  });
   document.getElementById("homePage").style.display = "flex";
   document.getElementById("authScreen").style.display = "none";
   document.getElementById("appMain").style.display = "none";
@@ -487,15 +492,15 @@ logoutBtn?.addEventListener("click", () => {
   businessProfile = null;
   accessoriesDefs = [];
 
-  // ✅ Clear the UI too
-  newCustomer(); // clears customer name, job ref, rooms UI
+  // ✅ Clear the UI without opening any modals
+  clearJobState();
   document.getElementById("savedCustomersList").innerHTML = "";
   document.getElementById("accessoriesPricingList").innerHTML = "";
   renderQuote();
 
   setAuthUI();
   lockApp(true);
-  showAuthScreen();
+  showHomePage();
 });
 
   hydrateAuthUser();
@@ -1676,8 +1681,23 @@ async function deleteCustomer(name) {
   switchJobView("hub"); // return to customer list after delete
 }
 
+/** Reset all current-customer/job state without opening any modal */
+function clearJobState() {
+  window.currentQuoteNumber = null;
+  document.getElementById("customerName").value = "";
+  document.getElementById("jobRef").value = "";
+  rooms = [];
+  activeRoomId = null;
+  updateRoomList();
+  clearRoomForm();
+  showRoomForm(false);
+  document.getElementById("roomTitle").textContent = "No room selected";
+  document.getElementById("result").innerHTML = "";
+  updateStickyFooter();
+}
+
 function newCustomer() {
-  // Clear any previous values and show the focused setup modal
+  // Show the focused setup modal — state is cleared on confirm
   document.getElementById("newCustNameInput").value = "";
   document.getElementById("newCustRefInput").value = "";
   document.getElementById("newCustModal").style.display = "flex";
