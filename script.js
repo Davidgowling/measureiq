@@ -139,6 +139,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.getElementById("saveCustomerBtn").addEventListener("click", saveCustomer);
   document.getElementById("newCustomerBtn").addEventListener("click", newCustomer);
+  document.getElementById("backToCustomersBtn")?.addEventListener("click", () => switchJobView("hub"));
   document.getElementById("customerSearch")?.addEventListener("input", () => {
     renderSavedCustomersList(_cloudCache);
   });
@@ -548,8 +549,8 @@ function setupTabs() {
     document.querySelectorAll(".hamburger-item[data-page]").forEach((b) => {
       b.classList.toggle("active", b.dataset.page === page);
     });
-    // Footer only visible on Jobs page
-    if (stickyFooter) stickyFooter.style.display = page === "jobs" ? "block" : "none";
+    // Footer visibility is managed by switchJobView — hide it when leaving Jobs
+    if (page !== "jobs" && stickyFooter) stickyFooter.style.display = "none";
     closeMenu();
   }
 
@@ -582,9 +583,10 @@ function setupTabs() {
   window._switchSubTab = switchSubTab;
 }
 
-/** Navigate to the Jobs page and open the Quote sub-tab */
+/** Navigate to the Jobs page → job view → Quote sub-tab */
 function navigateToQuote() {
   if (window._switchPage)   window._switchPage("jobs");
+  switchJobView("job");
   if (window._switchSubTab) window._switchSubTab("quoteSection");
 }
 
@@ -1448,7 +1450,7 @@ async function saveCustomer() {
   const jobRef = document.getElementById("jobRef").value.trim();
 
   if (!name) {
-    alert("Enter a customer name.");
+    document.getElementById("customerName")?.focus();
     return;
   }
 
@@ -1470,7 +1472,14 @@ async function saveCustomer() {
   await flushSave(); // explicit save button = flush immediately
 
   renderSavedCustomersList(_cloudCache);
-  alert("Customer saved!");
+
+  // Brief topbar confirmation — no intrusive alerts
+  const ss = document.getElementById("saveStatus");
+  if (ss) {
+    ss.textContent = "✓ Saved";
+    ss.className = "save-status save-status--saved";
+    setTimeout(() => { ss.textContent = ""; ss.className = "save-status"; }, 2000);
+  }
 }
 
 /** OPTIMISED: debounced auto-save — no network call per keystroke */
@@ -1513,27 +1522,27 @@ function renderSavedCustomersList(cloud) {
     });
 
   if (!filtered.length && customers.length > 0 && query) {
-    list.innerHTML = `<li class="no-results muted">No customers match "${escapeHtml(query)}"</li>`;
+    list.innerHTML = `<li class="no-results">No customers match "${escapeHtml(query)}"</li>`;
     return;
   }
 
   filtered.forEach((c) => {
     const li = document.createElement("li");
-    const text = document.createElement("span");
-    const del = document.createElement("span");
-
-    text.textContent = c.jobRef ? `${c.name} (${c.jobRef})` : c.name;
-    del.textContent = "✕";
-    del.className = "delete-btn";
-
-    text.addEventListener("click", () => loadCustomer(c));
-    del.addEventListener("click", (e) => {
+    li.className = "hub-customer-card";
+    li.innerHTML = `
+      <div class="hcc-main">
+        <div class="hcc-name">${escapeHtml(c.name)}</div>
+        ${c.jobRef ? `<div class="hcc-ref">${escapeHtml(c.jobRef)}</div>` : ""}
+      </div>
+      <span class="hcc-arrow">›</span>
+      <button class="hcc-delete" aria-label="Delete ${escapeHtml(c.name)}">✕</button>
+    `;
+    li.querySelector(".hcc-main").addEventListener("click", () => loadCustomer(c));
+    li.querySelector(".hcc-arrow").addEventListener("click", () => loadCustomer(c));
+    li.querySelector(".hcc-delete").addEventListener("click", (e) => {
       e.stopPropagation();
       deleteCustomer(c.name);
     });
-
-    li.appendChild(text);
-    li.appendChild(del);
     list.appendChild(li);
   });
 }
@@ -1567,6 +1576,7 @@ function loadCustomer(c) {
 
   updateStickyFooter();
   renderQuote();
+  switchJobView("job"); // focus on this customer's job
 }
 
 async function deleteCustomer(name) {
@@ -1591,6 +1601,7 @@ async function deleteCustomer(name) {
 
   updateStickyFooter();
   renderQuote();
+  switchJobView("hub"); // return to customer list after delete
 }
 
 function newCustomer() {
@@ -1606,6 +1617,20 @@ function newCustomer() {
   document.getElementById("result").innerHTML = "";
   updateStickyFooter();
   renderQuote();
+  switchJobView("job"); // enter focused job view for the new customer
+}
+
+//------------------------------------------------------
+// JOB VIEW SWITCHER
+//------------------------------------------------------
+function switchJobView(view) {
+  const hub = document.getElementById("customerHub");
+  const job = document.getElementById("jobView");
+  const footer = document.getElementById("stickyFooter");
+  if (hub) hub.style.display = view === "hub" ? "" : "none";
+  if (job) job.style.display = view === "job" ? "" : "none";
+  // Footer only relevant in job view
+  if (footer) footer.style.display = view === "job" ? "block" : "none";
 }
 
 //------------------------------------------------------
