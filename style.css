@@ -989,25 +989,25 @@ textarea:focus {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  width: 40px;
-  height: 30px;
-  background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(255,255,255,0.18);
-  border-radius: 8px;
-  padding: 7px 8px;
+  width: 52px;
+  height: 40px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.22);
+  border-radius: 10px;
+  padding: 10px 11px;
   cursor: pointer;
   flex-shrink: 0;
   transition: background 0.15s, border-color 0.15s;
 }
 
 .hamburger-btn:hover {
-  background: rgba(255,255,255,0.16);
-  border-color: rgba(255,255,255,0.32);
+  background: rgba(255,255,255,0.18);
+  border-color: rgba(255,255,255,0.38);
 }
 
 .hamburger-btn span {
   display: block;
-  height: 2px;
+  height: 2.5px;
   background: #ffffff;
   border-radius: 2px;
   transition: transform 0.22s ease, opacity 0.15s ease;
@@ -1015,9 +1015,9 @@ textarea:focus {
 }
 
 /* X animation when open */
-.hamburger-btn.open span:nth-child(1) { transform: translateY(8px) rotate(45deg); }
+.hamburger-btn.open span:nth-child(1) { transform: translateY(9px) rotate(45deg); }
 .hamburger-btn.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
-.hamburger-btn.open span:nth-child(3) { transform: translateY(-8px) rotate(-45deg); }
+.hamburger-btn.open span:nth-child(3) { transform: translateY(-9px) rotate(-45deg); }
 
 /* -------------------------------------------------------
    HAMBURGER DROPDOWN MENU
