@@ -959,6 +959,16 @@ textarea:focus {
   color: #ffffff;
 }
 
+/* Column widths: Room flexible, Area and Total fixed-narrow */
+.quote-rooms-table th:nth-child(1),
+.quote-rooms-table td:nth-child(1) { width: auto; }
+
+.quote-rooms-table th:nth-child(2),
+.quote-rooms-table td:nth-child(2) { width: 75px; text-align: right; }
+
+.quote-rooms-table th:nth-child(3),
+.quote-rooms-table td:nth-child(3) { width: 110px; text-align: right; }
+
 .quote-totals {
   font-size: 0.9rem;
   text-align: right;
