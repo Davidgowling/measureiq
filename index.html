@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MeasureIQ — Smart Flooring Calculator</title>
   <link rel="icon" type="image/png" href="assets/favicon.png" />
-  <link rel="stylesheet" href="style.css?v=16" />
+  <link rel="stylesheet" href="style.css?v=17" />
 </head>
 
 <body>
@@ -157,23 +157,12 @@
       <!-- ── JOB VIEW: focused on one customer ── -->
       <div id="jobView" class="job-view" style="display:none;">
 
-        <!-- Job header: back · editable name/ref · save -->
+        <!-- Job header: back · editable name/ref/contact · save -->
         <div class="job-header no-print">
           <button id="backToCustomersBtn" class="btn-back">← Customers</button>
           <div class="job-identity">
             <input id="customerName" class="job-name-input" placeholder="Customer name" />
             <input id="jobRef" class="job-ref-input" placeholder="Job reference / address" />
-          </div>
-          <button id="saveCustomerBtn" class="btn primary">Save</button>
-        </div>
-
-        <!-- Contact details (collapsible) -->
-        <div class="job-contact no-print" id="jobContactSection">
-          <button class="job-contact__toggle" id="toggleContactBtn" aria-expanded="false">
-            <span>Contact details</span>
-            <span class="job-contact__arrow">▾</span>
-          </button>
-          <div class="job-contact__fields" id="contactFields" style="display:none;">
             <div class="contact-grid">
               <input id="custPhone" type="tel" placeholder="Phone" />
               <input id="custEmail" type="email" placeholder="Email" />
@@ -183,6 +172,7 @@
               <input id="custPostcode" type="text" placeholder="Postcode" />
             </div>
           </div>
+          <button id="saveCustomerBtn" class="btn primary">Save</button>
         </div>
 
         <div class="layout">
@@ -412,6 +402,15 @@
         <input id="newCustNameInput" type="text" placeholder="e.g. John Smith" autocomplete="name" />
         <label style="margin-top:14px;">Job Reference / Address</label>
         <input id="newCustRefInput" type="text" placeholder="e.g. 12 High Street" />
+        <label style="margin-top:14px;">Contact Details <span class="label-optional">optional</span></label>
+        <div class="contact-grid contact-grid--modal">
+          <input id="newCustPhone" type="tel" placeholder="Phone" />
+          <input id="newCustEmail" type="email" placeholder="Email" />
+          <input id="newCustAddress1" type="text" placeholder="Address line 1" />
+          <input id="newCustAddress2" type="text" placeholder="Address line 2" />
+          <input id="newCustTown" type="text" placeholder="Town / City" />
+          <input id="newCustPostcode" type="text" placeholder="Postcode" />
+        </div>
       </div>
       <div class="modal-actions">
         <button id="newCustCancelBtn" class="btn secondary">Cancel</button>
@@ -439,6 +438,6 @@
     </div>
   </div>
 
-  <script src="script.js?v=14"></script>
+  <script src="script.js?v=15"></script>
 </body>
 </html>

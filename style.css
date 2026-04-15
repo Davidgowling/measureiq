@@ -916,53 +916,20 @@ textarea:focus {
 .job-ref-input::placeholder { color: var(--dms-border); }
 
 /* ---- Customer contact details ---- */
-.job-contact {
-  border-top: 1px solid var(--dms-border-lt);
-  margin: 0 0 4px;
-}
-
-.job-contact__toggle {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 8px 2px;
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--dms-muted);
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-}
-
-.job-contact__toggle:hover { color: var(--dms-dark); }
-
-.job-contact__arrow {
-  font-size: 0.9rem;
-  transition: transform 0.18s;
-}
-
-.job-contact__toggle[aria-expanded="true"] .job-contact__arrow {
-  transform: rotate(180deg);
-}
-
-.job-contact__fields {
-  padding: 4px 0 12px;
-}
-
 .contact-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  gap: 6px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--dms-border-lt);
 }
 
 .contact-grid input {
-  padding: 7px 10px;
+  padding: 5px 8px;
   border: 1px solid var(--dms-border);
-  border-radius: 8px;
-  font-size: 0.88rem;
+  border-radius: 6px;
+  font-size: 0.82rem;
   color: var(--dms-text);
   background: #fff;
   width: 100%;
@@ -975,14 +942,21 @@ textarea:focus {
 
 /* Address fields span full width */
 .contact-grid input#custAddress1,
-.contact-grid input#custAddress2 {
+.contact-grid input#custAddress2,
+.contact-grid input#newCustAddress1,
+.contact-grid input#newCustAddress2 {
   grid-column: 1 / -1;
 }
 
-@media (max-width: 500px) {
-  .contact-grid { grid-template-columns: 1fr; }
-  .contact-grid input#custAddress1,
-  .contact-grid input#custAddress2 { grid-column: 1; }
+.contact-grid--modal {
+  margin-top: 6px;
+}
+
+.label-optional {
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: var(--dms-muted);
+  margin-left: 4px;
 }
 
 .room-list-vertical {

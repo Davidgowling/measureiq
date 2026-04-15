@@ -142,15 +142,6 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("newCustomerBtn").addEventListener("click", newCustomer);
   document.getElementById("backToCustomersBtn")?.addEventListener("click", () => switchJobView("hub"));
 
-  // Contact details toggle
-  document.getElementById("toggleContactBtn")?.addEventListener("click", () => {
-    const btn = document.getElementById("toggleContactBtn");
-    const fields = document.getElementById("contactFields");
-    const open = btn.getAttribute("aria-expanded") === "true";
-    btn.setAttribute("aria-expanded", String(!open));
-    fields.style.display = open ? "none" : "";
-  });
-
   // New-customer modal
   document.getElementById("newCustCancelBtn")?.addEventListener("click", () => {
     document.getElementById("newCustModal").style.display = "none";
@@ -161,6 +152,14 @@ document.addEventListener("DOMContentLoaded", () => {
     // Populate job view fields
     document.getElementById("customerName").value = name;
     document.getElementById("jobRef").value = document.getElementById("newCustRefInput").value.trim();
+    // Transfer contact fields from modal to job view
+    [["newCustPhone","custPhone"],["newCustEmail","custEmail"],
+     ["newCustAddress1","custAddress1"],["newCustAddress2","custAddress2"],
+     ["newCustTown","custTown"],["newCustPostcode","custPostcode"]
+    ].forEach(([src, dst]) => {
+      const el = document.getElementById(dst);
+      if (el) el.value = (document.getElementById(src)?.value || "").trim();
+    });
     window.currentQuoteNumber = null;
     rooms = [];
     activeRoomId = null;
@@ -1743,20 +1742,10 @@ function loadCustomer(c) {
   // Populate contact fields
   const contactIds = ["custPhone","custEmail","custAddress1","custAddress2","custTown","custPostcode"];
   const contactKeys = ["phone","email","address1","address2","town","postcode"];
-  let hasContact = false;
   contactIds.forEach((id, i) => {
-    const val = c[contactKeys[i]] || "";
     const el = document.getElementById(id);
-    if (el) el.value = val;
-    if (val) hasContact = true;
+    if (el) el.value = c[contactKeys[i]] || "";
   });
-  // Auto-expand if there's existing contact data
-  if (hasContact) {
-    const btn = document.getElementById("toggleContactBtn");
-    const fields = document.getElementById("contactFields");
-    if (btn) btn.setAttribute("aria-expanded", "true");
-    if (fields) fields.style.display = "";
-  }
 
   // Restore the stable quote number for this customer
   window.currentQuoteNumber = c.quoteNumber || null;
@@ -1818,11 +1807,6 @@ function clearJobState() {
     const el = document.getElementById(id);
     if (el) el.value = "";
   });
-  // Collapse contact section
-  const btn = document.getElementById("toggleContactBtn");
-  const fields = document.getElementById("contactFields");
-  if (btn) btn.setAttribute("aria-expanded", "false");
-  if (fields) fields.style.display = "none";
   rooms = [];
   activeRoomId = null;
   updateRoomList();
@@ -1835,8 +1819,12 @@ function clearJobState() {
 
 function newCustomer() {
   // Show the focused setup modal — state is cleared on confirm
-  document.getElementById("newCustNameInput").value = "";
-  document.getElementById("newCustRefInput").value = "";
+  ["newCustNameInput","newCustRefInput","newCustPhone","newCustEmail",
+   "newCustAddress1","newCustAddress2","newCustTown","newCustPostcode"
+  ].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = "";
+  });
   document.getElementById("newCustModal").style.display = "flex";
   setTimeout(() => document.getElementById("newCustNameInput").focus(), 60);
 }
