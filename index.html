@@ -5,18 +5,41 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MeasureIQ — Smart Flooring Calculator</title>
   <link rel="icon" type="image/png" href="assets/favicon.png" />
-  <link rel="stylesheet" href="style.css?v=11" />
+  <link rel="stylesheet" href="style.css?v=12" />
 </head>
 
 <body>
 
   <!-- ============================================================
+       HOMEPAGE (logged-out landing)
+       ============================================================ -->
+  <div id="homePage" class="home-page" style="display:none;">
+    <div class="home-hero">
+      <img src="assets/logo-white-web.png" alt="MeasureIQ" class="home-hero__logo" />
+      <h1 class="home-hero__title">Smart flooring calculations.<br>Professional customer quotes.</h1>
+      <p class="home-hero__sub">Built for trade professionals. Calculate rooms, generate quotes, and sync across all your devices — in seconds.</p>
+      <div class="home-hero__cta">
+        <button id="homeGetStartedBtn" class="btn primary home-btn-lg">Get started free</button>
+        <button id="homeSignInBtn" class="home-signin-btn">Already have an account? Sign in</button>
+      </div>
+      <div class="home-features">
+        <div class="home-feature">Instant room calculations</div>
+        <div class="home-feature">Professional customer quotes</div>
+        <div class="home-feature">Cloud-synced across all devices</div>
+        <div class="home-feature">Accessories pricing built in</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
        FULL-PAGE LOGIN / REGISTER SCREEN
        ============================================================ -->
-  <div id="authScreen" class="auth-screen">
+  <div id="authScreen" class="auth-screen" style="display:none;">
     <div class="auth-screen__left">
       <div class="auth-screen__brand">
-        <img src="assets/logo-white-web.png" alt="MeasureIQ" class="auth-screen__logo" />
+        <button class="auth-logo-btn" id="authLogoBtn" aria-label="Back to home">
+          <img src="assets/logo-white-web.png" alt="MeasureIQ" class="auth-screen__logo" />
+        </button>
         <p class="auth-screen__tagline">The smart flooring calculator for trade professionals.</p>
         <ul class="auth-screen__features">
           <li>Instant room calculations</li>
@@ -98,7 +121,7 @@
         </button>
         <div id="hamburgerMenu" class="hamburger-menu" style="display:none;">
           <div class="hamburger-section-label">Navigation</div>
-          <button class="hamburger-item active" data-page="jobs">Jobs</button>
+          <button class="hamburger-item active" data-page="jobs" data-view="hub">Customers</button>
           <button class="hamburger-item" data-page="accessories">Accessories</button>
           <button class="hamburger-item" data-page="profile">Business Profile</button>
           <div class="hamburger-divider"></div>
@@ -110,7 +133,9 @@
       </div>
       <div class="topbar__right">
         <span id="saveStatus" class="save-status"></span>
-        <img src="assets/logo-white-web.png" alt="MeasureIQ" class="topbar__logo" />
+        <button id="appLogoBtn" class="topbar-logo-btn" aria-label="Home">
+          <img src="assets/logo-white-web.png" alt="MeasureIQ" class="topbar__logo" />
+        </button>
       </div>
     </div>
 
@@ -356,6 +381,46 @@
 
   </div>
 
-  <script src="script.js?v=9"></script>
+  <!-- ============================================================
+       MODAL: New Customer setup
+       ============================================================ -->
+  <div id="newCustModal" class="modal" style="display:none;">
+    <div class="modal-content modal-sm">
+      <div class="modal-header">
+        <h2>New Customer</h2>
+      </div>
+      <div class="modal-body">
+        <label>Customer Name <span class="required-star">*</span></label>
+        <input id="newCustNameInput" type="text" placeholder="e.g. John Smith" autocomplete="name" />
+        <label style="margin-top:14px;">Job Reference / Address</label>
+        <input id="newCustRefInput" type="text" placeholder="e.g. 12 High Street" />
+      </div>
+      <div class="modal-actions">
+        <button id="newCustCancelBtn" class="btn secondary">Cancel</button>
+        <button id="newCustStartBtn" class="btn primary">Start Job →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       MODAL: Room name (add / rename)
+       ============================================================ -->
+  <div id="roomNameModal" class="modal" style="display:none;">
+    <div class="modal-content modal-sm">
+      <div class="modal-header">
+        <h2 id="roomNameModalTitle">Room Name</h2>
+      </div>
+      <div class="modal-body">
+        <label id="roomNameModalLabel">Room name</label>
+        <input id="roomNameInput" type="text" placeholder="e.g. Living Room, Kitchen…" />
+      </div>
+      <div class="modal-actions">
+        <button id="roomNameCancelBtn" class="btn secondary">Cancel</button>
+        <button id="roomNameConfirmBtn" class="btn primary">Add Room</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js?v=10"></script>
 </body>
 </html>

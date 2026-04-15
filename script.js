@@ -140,6 +140,54 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("saveCustomerBtn").addEventListener("click", saveCustomer);
   document.getElementById("newCustomerBtn").addEventListener("click", newCustomer);
   document.getElementById("backToCustomersBtn")?.addEventListener("click", () => switchJobView("hub"));
+
+  // New-customer modal
+  document.getElementById("newCustCancelBtn")?.addEventListener("click", () => {
+    document.getElementById("newCustModal").style.display = "none";
+  });
+  document.getElementById("newCustStartBtn")?.addEventListener("click", () => {
+    const name = document.getElementById("newCustNameInput").value.trim();
+    if (!name) { document.getElementById("newCustNameInput").focus(); return; }
+    // Populate job view fields
+    document.getElementById("customerName").value = name;
+    document.getElementById("jobRef").value = document.getElementById("newCustRefInput").value.trim();
+    window.currentQuoteNumber = null;
+    rooms = [];
+    activeRoomId = null;
+    updateRoomList();
+    clearRoomForm();
+    showRoomForm(false);
+    document.getElementById("roomTitle").textContent = "No room selected";
+    document.getElementById("result").innerHTML = "";
+    updateStickyFooter();
+    renderQuote();
+    document.getElementById("newCustModal").style.display = "none";
+    switchJobView("job");
+    // Immediately prompt for first room
+    showRoomNameModal("", "Add your first room", "Add Room", (roomName) => {
+      doAddRoom(roomName);
+    });
+  });
+
+  // Room name modal
+  document.getElementById("roomNameCancelBtn")?.addEventListener("click", () => {
+    document.getElementById("roomNameModal").style.display = "none";
+    _roomNameCb = null;
+  });
+  document.getElementById("roomNameConfirmBtn")?.addEventListener("click", () => {
+    const name = document.getElementById("roomNameInput").value.trim();
+    if (!name) { document.getElementById("roomNameInput").focus(); return; }
+    document.getElementById("roomNameModal").style.display = "none";
+    if (_roomNameCb) { _roomNameCb(name); _roomNameCb = null; }
+  });
+  // Allow Enter key in room name modal
+  document.getElementById("roomNameInput")?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") document.getElementById("roomNameConfirmBtn").click();
+  });
+  // Allow Enter key in new customer modal
+  document.getElementById("newCustNameInput")?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") document.getElementById("newCustStartBtn").click();
+  });
   document.getElementById("customerSearch")?.addEventListener("input", () => {
     renderSavedCustomersList(_cloudCache);
   });
@@ -237,12 +285,28 @@ function setAuthUI() {
   }
 }
 
-function showAuthScreen() {
-  document.getElementById("authScreen").style.display = "flex";
+function showHomePage() {
+  document.getElementById("homePage").style.display = "flex";
+  document.getElementById("authScreen").style.display = "none";
   document.getElementById("appMain").style.display = "none";
 }
 
+function showAuthScreen(tab) {
+  document.getElementById("homePage").style.display = "none";
+  document.getElementById("authScreen").style.display = "flex";
+  document.getElementById("appMain").style.display = "none";
+  // Optionally pre-select login or register tab
+  if (tab) {
+    document.querySelectorAll(".auth-tab").forEach((t) => {
+      t.classList.toggle("active", t.dataset.authTab === tab);
+    });
+    document.getElementById("authLoginPanel").style.display   = tab === "login"    ? "block" : "none";
+    document.getElementById("authRegisterPanel").style.display = tab === "register" ? "block" : "none";
+  }
+}
+
 function hideAuthScreen() {
+  document.getElementById("homePage").style.display = "none";
   document.getElementById("authScreen").style.display = "none";
   document.getElementById("appMain").style.display = "block";
 }
@@ -266,6 +330,19 @@ async function hydrateAuthUser() {
 
 function setupAuthUI() {
   const logoutBtn = document.getElementById("logoutBtn");
+
+  // Homepage buttons → show auth screen
+  document.getElementById("homeGetStartedBtn")?.addEventListener("click", () => showAuthScreen("register"));
+  document.getElementById("homeSignInBtn")?.addEventListener("click",     () => showAuthScreen("login"));
+
+  // Auth screen logo → back to homepage
+  document.getElementById("authLogoBtn")?.addEventListener("click", showHomePage);
+
+  // App topbar logo → Customer Hub (when logged in)
+  document.getElementById("appLogoBtn")?.addEventListener("click", () => {
+    window._switchPage?.("jobs");
+    switchJobView("hub");
+  });
 
   // Auth screen tab switching
   document.querySelectorAll(".auth-tab").forEach((tab) => {
@@ -450,7 +527,7 @@ async function initCloudOnly() {
     await hydrateAuthUser();
   } catch {}
   if (!isSignedIn()) {
-    showAuthScreen();
+    showHomePage(); // show landing page, not auth form, for first-time visitors
     return;
   }
   hideAuthScreen();
@@ -555,7 +632,11 @@ function setupTabs() {
   }
 
   document.querySelectorAll(".hamburger-item[data-page]").forEach((btn) => {
-    btn.addEventListener("click", () => switchPage(btn.dataset.page));
+    btn.addEventListener("click", () => {
+      switchPage(btn.dataset.page);
+      // If button specifies a sub-view (e.g. hub), switch to it
+      if (btn.dataset.view) switchJobView(btn.dataset.view);
+    });
   });
 
   // Sub-tab switching within the Jobs page (Calculator / Quote)
@@ -662,23 +743,16 @@ function showRoomForm(show) {
 }
 
 function addRoom() {
-  const name = prompt("Enter room name:");
+  showRoomNameModal("", "Add Room", "Add Room", doAddRoom);
+}
+
+function doAddRoom(name) {
   if (!name) return;
-
   rooms.forEach((r) => (r.collapsed = true));
-
-  const room = {
-    id: Date.now(),
-    name,
-    data: {},
-    collapsed: false,
-  };
-
+  const room = { id: Date.now(), name, data: {}, collapsed: false };
   rooms.push(room);
   activeRoomId = room.id;
-
   normaliseRoomLines(room);
-
   updateRoomList();
   loadRoom(room.id);
 }
@@ -687,14 +761,12 @@ function renameRoom() {
   if (!activeRoomId) return;
   const room = rooms.find((r) => r.id === activeRoomId);
   if (!room) return;
-
-  const newName = prompt("Rename room:", room.name);
-  if (!newName) return;
-
-  room.name = newName;
-  updateRoomList();
-  document.getElementById("roomTitle").textContent = newName;
-  calculateRoom(true);
+  showRoomNameModal(room.name, "Rename Room", "Save", (newName) => {
+    room.name = newName;
+    updateRoomList();
+    document.getElementById("roomTitle").textContent = newName;
+    calculateRoom(true);
+  });
 }
 
 function deleteRoom() {
@@ -1605,19 +1677,26 @@ async function deleteCustomer(name) {
 }
 
 function newCustomer() {
-  window.currentQuoteNumber = null;
-  document.getElementById("customerName").value = "";
-  document.getElementById("jobRef").value = "";
-  rooms = [];
-  activeRoomId = null;
-  updateRoomList();
-  clearRoomForm();
-  showRoomForm(false);
-  document.getElementById("roomTitle").textContent = "No room selected";
-  document.getElementById("result").innerHTML = "";
-  updateStickyFooter();
-  renderQuote();
-  switchJobView("job"); // enter focused job view for the new customer
+  // Clear any previous values and show the focused setup modal
+  document.getElementById("newCustNameInput").value = "";
+  document.getElementById("newCustRefInput").value = "";
+  document.getElementById("newCustModal").style.display = "flex";
+  setTimeout(() => document.getElementById("newCustNameInput").focus(), 60);
+}
+
+//------------------------------------------------------
+// MODAL HELPERS
+//------------------------------------------------------
+let _roomNameCb = null;
+
+function showRoomNameModal(initial, title, confirmLabel, cb) {
+  _roomNameCb = cb || null;
+  document.getElementById("roomNameModalTitle").textContent = title || "Room Name";
+  document.getElementById("roomNameConfirmBtn").textContent = confirmLabel || "Confirm";
+  const input = document.getElementById("roomNameInput");
+  input.value = initial || "";
+  document.getElementById("roomNameModal").style.display = "flex";
+  setTimeout(() => input.focus(), 60);
 }
 
 //------------------------------------------------------
