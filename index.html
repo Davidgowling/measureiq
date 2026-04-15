@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MeasureIQ — Smart Flooring Calculator</title>
   <link rel="icon" type="image/png" href="assets/favicon.png" />
-  <link rel="stylesheet" href="style.css?v=17" />
+  <link rel="stylesheet" href="style.css?v=18" />
 </head>
 
 <body>
@@ -157,9 +157,12 @@
       <!-- ── JOB VIEW: focused on one customer ── -->
       <div id="jobView" class="job-view" style="display:none;">
 
-        <!-- Job header: back · editable name/ref/contact · save -->
+        <!-- Job header: back/save nav · then full-width customer info -->
         <div class="job-header no-print">
-          <button id="backToCustomersBtn" class="btn-back">← Customers</button>
+          <div class="job-header__nav">
+            <button id="backToCustomersBtn" class="btn-back">← Customers</button>
+            <button id="saveCustomerBtn" class="btn primary">Save</button>
+          </div>
           <div class="job-identity">
             <input id="customerName" class="job-name-input" placeholder="Customer name" />
             <input id="jobRef" class="job-ref-input" placeholder="Job reference / address" />
@@ -172,7 +175,6 @@
               <input id="custPostcode" type="text" placeholder="Postcode" />
             </div>
           </div>
-          <button id="saveCustomerBtn" class="btn primary">Save</button>
         </div>
 
         <div class="layout">
