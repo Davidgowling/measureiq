@@ -142,6 +142,15 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("newCustomerBtn").addEventListener("click", newCustomer);
   document.getElementById("backToCustomersBtn")?.addEventListener("click", () => switchJobView("hub"));
 
+  // Contact details toggle
+  document.getElementById("toggleContactBtn")?.addEventListener("click", () => {
+    const btn = document.getElementById("toggleContactBtn");
+    const fields = document.getElementById("contactFields");
+    const open = btn.getAttribute("aria-expanded") === "true";
+    btn.setAttribute("aria-expanded", String(!open));
+    fields.style.display = open ? "none" : "";
+  });
+
   // New-customer modal
   document.getElementById("newCustCancelBtn")?.addEventListener("click", () => {
     document.getElementById("newCustModal").style.display = "none";
@@ -1497,6 +1506,7 @@ function renderQuote() {
   const custName = document.getElementById("customerName").value.trim() || "Customer";
   const jobRef = document.getElementById("jobRef").value.trim();
   const dateStr = new Date().toLocaleDateString("en-GB");
+  const contact = readContactFields();
 
   if (!window.currentQuoteNumber) {
       window.currentQuoteNumber = generateQuoteNumber();
@@ -1540,10 +1550,21 @@ container.innerHTML = `
   ${buildBusinessQuoteHeader()}
 
   <div class="quote-customer-block">
-    <strong>Quote No:</strong> ${quoteNumber}<br>
-    <strong>Quote for:</strong> ${escapeHtml(custName)}<br>
-    ${jobRef ? `<strong>Job Ref:</strong> ${escapeHtml(jobRef)}<br>` : ""}
-    <strong>Date:</strong> ${dateStr}
+    <div class="qcb-left">
+      <strong>Quote for:</strong><br>
+      ${escapeHtml(custName)}<br>
+      ${contact.address1 ? escapeHtml(contact.address1) + "<br>" : ""}
+      ${contact.address2 ? escapeHtml(contact.address2) + "<br>" : ""}
+      ${contact.town ? escapeHtml(contact.town) + "<br>" : ""}
+      ${contact.postcode ? escapeHtml(contact.postcode) + "<br>" : ""}
+      ${contact.phone ? `<br>${escapeHtml(contact.phone)}` : ""}
+      ${contact.email ? `<br>${escapeHtml(contact.email)}` : ""}
+    </div>
+    <div class="qcb-right">
+      <strong>Quote No:</strong> ${quoteNumber}<br>
+      <strong>Date:</strong> ${dateStr}<br>
+      ${jobRef ? `<strong>Job Ref:</strong> ${escapeHtml(jobRef)}` : ""}
+    </div>
   </div>
 
     <table class="quote-rooms-table">
@@ -1600,6 +1621,17 @@ function buildQuoteLineItems(room) {
 //------------------------------------------------------
 // CUSTOMER SAVE / LOAD (CLOUD-ONLY, OPTIMISED)
 //------------------------------------------------------
+function readContactFields() {
+  return {
+    phone:    (document.getElementById("custPhone")?.value    || "").trim(),
+    email:    (document.getElementById("custEmail")?.value    || "").trim(),
+    address1: (document.getElementById("custAddress1")?.value || "").trim(),
+    address2: (document.getElementById("custAddress2")?.value || "").trim(),
+    town:     (document.getElementById("custTown")?.value     || "").trim(),
+    postcode: (document.getElementById("custPostcode")?.value || "").trim(),
+  };
+}
+
 async function saveCustomer() {
   const name = document.getElementById("customerName").value.trim();
   const jobRef = document.getElementById("jobRef").value.trim();
@@ -1613,7 +1645,7 @@ async function saveCustomer() {
 
   // Ensure this customer has a stable quote number
   if (!window.currentQuoteNumber) window.currentQuoteNumber = generateQuoteNumber();
-  const record = { name, jobRef, rooms, quoteNumber: window.currentQuoteNumber, timestamp: Date.now() };
+  const record = { name, jobRef, ...readContactFields(), rooms, quoteNumber: window.currentQuoteNumber, timestamp: Date.now() };
 
   // OPTIMISED: use cache, no re-fetch
   const cloud = await getCloudData();
@@ -1643,7 +1675,7 @@ function autoUpdateCurrentCustomer() {
   if (!name || !isSignedIn()) return;
 
   const jobRef = document.getElementById("jobRef").value.trim();
-  const record = { name, jobRef, rooms, quoteNumber: window.currentQuoteNumber || null, timestamp: Date.now() };
+  const record = { name, jobRef, ...readContactFields(), rooms, quoteNumber: window.currentQuoteNumber || null, timestamp: Date.now() };
 
   if (!_cloudCache) _cloudCache = {};
   const customers = Array.isArray(_cloudCache.customers) ? _cloudCache.customers : [];
@@ -1708,6 +1740,24 @@ function loadCustomer(c) {
   document.getElementById("customerName").value = c.name || "";
   document.getElementById("jobRef").value = c.jobRef || "";
 
+  // Populate contact fields
+  const contactIds = ["custPhone","custEmail","custAddress1","custAddress2","custTown","custPostcode"];
+  const contactKeys = ["phone","email","address1","address2","town","postcode"];
+  let hasContact = false;
+  contactIds.forEach((id, i) => {
+    const val = c[contactKeys[i]] || "";
+    const el = document.getElementById(id);
+    if (el) el.value = val;
+    if (val) hasContact = true;
+  });
+  // Auto-expand if there's existing contact data
+  if (hasContact) {
+    const btn = document.getElementById("toggleContactBtn");
+    const fields = document.getElementById("contactFields");
+    if (btn) btn.setAttribute("aria-expanded", "true");
+    if (fields) fields.style.display = "";
+  }
+
   // Restore the stable quote number for this customer
   window.currentQuoteNumber = c.quoteNumber || null;
 
@@ -1764,6 +1814,15 @@ function clearJobState() {
   window.currentQuoteNumber = null;
   document.getElementById("customerName").value = "";
   document.getElementById("jobRef").value = "";
+  ["custPhone","custEmail","custAddress1","custAddress2","custTown","custPostcode"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = "";
+  });
+  // Collapse contact section
+  const btn = document.getElementById("toggleContactBtn");
+  const fields = document.getElementById("contactFields");
+  if (btn) btn.setAttribute("aria-expanded", "false");
+  if (fields) fields.style.display = "none";
   rooms = [];
   activeRoomId = null;
   updateRoomList();

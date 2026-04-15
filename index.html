@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MeasureIQ — Smart Flooring Calculator</title>
   <link rel="icon" type="image/png" href="assets/favicon.png" />
-  <link rel="stylesheet" href="style.css?v=15" />
+  <link rel="stylesheet" href="style.css?v=16" />
 </head>
 
 <body>
@@ -165,6 +165,24 @@
             <input id="jobRef" class="job-ref-input" placeholder="Job reference / address" />
           </div>
           <button id="saveCustomerBtn" class="btn primary">Save</button>
+        </div>
+
+        <!-- Contact details (collapsible) -->
+        <div class="job-contact no-print" id="jobContactSection">
+          <button class="job-contact__toggle" id="toggleContactBtn" aria-expanded="false">
+            <span>Contact details</span>
+            <span class="job-contact__arrow">▾</span>
+          </button>
+          <div class="job-contact__fields" id="contactFields" style="display:none;">
+            <div class="contact-grid">
+              <input id="custPhone" type="tel" placeholder="Phone" />
+              <input id="custEmail" type="email" placeholder="Email" />
+              <input id="custAddress1" type="text" placeholder="Address line 1" />
+              <input id="custAddress2" type="text" placeholder="Address line 2 (optional)" />
+              <input id="custTown" type="text" placeholder="Town / City" />
+              <input id="custPostcode" type="text" placeholder="Postcode" />
+            </div>
+          </div>
         </div>
 
         <div class="layout">
@@ -421,6 +439,6 @@
     </div>
   </div>
 
-  <script src="script.js?v=13"></script>
+  <script src="script.js?v=14"></script>
 </body>
 </html>
