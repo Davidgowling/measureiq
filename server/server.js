@@ -14,7 +14,9 @@ const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET;
 const FRONTEND_BASE_URL = process.env.FRONTEND_BASE_URL;
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Resend is only needed for password-reset emails.
+// If the API key is missing the server still starts — reset emails just won't send.
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 // --------------------------------------------------
 // Database
@@ -179,6 +181,11 @@ app.post("/api/auth/forgot-password", authLimiter, async (req, res) => {
   );
 
   const resetUrl = `${FRONTEND_BASE_URL}/reset-password.html?token=${token}`;
+
+  if (!resend) {
+    console.warn("RESEND_API_KEY not set — password reset email not sent");
+    return res.json({ ok: true });
+  }
 
   await resend.emails.send({
     from: "MeasureIQ <no-reply@measureiq.app>",
