@@ -64,6 +64,7 @@ body {
   width: 300px;
   max-width: 90%;
   margin-bottom: 36px;
+  mix-blend-mode: screen;
 }
 
 .home-hero__title {
@@ -302,6 +303,7 @@ body {
   width: 320px;
   max-width: 100%;
   margin-bottom: 28px;
+  mix-blend-mode: screen;
 }
 
 .auth-screen__tagline {
@@ -544,10 +546,11 @@ body {
   }
 }
 
-/* Topbar logo — doubled from original 36px */
+/* Topbar logo */
 .topbar__logo {
-  height: 72px;
+  height: 80px;
   width: auto;
+  mix-blend-mode: screen;
 }
 
 /* -----------------------------------------------------
@@ -1434,7 +1437,7 @@ textarea:focus {
     padding: 8px 12px;
   }
   .topbar__logo {
-    height: 48px;
+    height: 64px;
   }
   .hamburger-user #authStatus {
     font-size: 0.75rem;
