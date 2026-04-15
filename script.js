@@ -277,7 +277,7 @@ function setAuthUI() {
   const signedIn = !!authUser;
 
   if (signedIn) {
-    status.textContent = `Signed in as ${authUser.email || "user"}`;
+    status.textContent = authUser.email || "user";
     logoutBtn.style.display = "block";
   } else {
     status.textContent = "Not signed in";
