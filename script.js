@@ -1882,8 +1882,11 @@ function switchJobView(view) {
   const footer = document.getElementById("stickyFooter");
   if (hub) hub.style.display = view === "hub" ? "" : "none";
   if (job) job.style.display = view === "job" ? "" : "none";
-  // Footer only relevant in job view
   if (footer) footer.style.display = view === "job" ? "block" : "none";
+  // Refresh dashboard stats and greeting whenever hub becomes visible
+  if (view === "hub" && _cloudCache) {
+    updateDashboard(Array.isArray(_cloudCache.customers) ? _cloudCache.customers : []);
+  }
 }
 
 //------------------------------------------------------
