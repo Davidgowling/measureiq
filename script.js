@@ -229,7 +229,7 @@ function setAuthUI() {
 
   if (signedIn) {
     status.textContent = `Signed in as ${authUser.email || "user"}`;
-    logoutBtn.style.display = "inline-block";
+    logoutBtn.style.display = "block";
   } else {
     status.textContent = "Not signed in";
     logoutBtn.style.display = "none";
@@ -513,20 +513,47 @@ function setupTabs() {
     accessories: document.getElementById("pageAccessories"),
     profile:     document.getElementById("pageProfile"),
   };
-  const stickyFooter = document.getElementById("stickyFooter");
+  const stickyFooter  = document.getElementById("stickyFooter");
+  const hamburgerBtn  = document.getElementById("hamburgerBtn");
+  const hamburgerMenu = document.getElementById("hamburgerMenu");
+
+  // Toggle hamburger open / closed
+  hamburgerBtn?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const isOpen = hamburgerMenu.style.display !== "none";
+    hamburgerMenu.style.display = isOpen ? "none" : "block";
+    hamburgerBtn.classList.toggle("open", !isOpen);
+    hamburgerBtn.setAttribute("aria-expanded", String(!isOpen));
+  });
+
+  // Close when clicking anywhere outside the menu
+  document.addEventListener("click", (e) => {
+    if (!hamburgerBtn?.contains(e.target) && !hamburgerMenu?.contains(e.target)) {
+      hamburgerMenu.style.display = "none";
+      hamburgerBtn?.classList.remove("open");
+      hamburgerBtn?.setAttribute("aria-expanded", "false");
+    }
+  });
+
+  function closeMenu() {
+    if (hamburgerMenu) hamburgerMenu.style.display = "none";
+    hamburgerBtn?.classList.remove("open");
+    hamburgerBtn?.setAttribute("aria-expanded", "false");
+  }
 
   function switchPage(page) {
     Object.entries(pages).forEach(([key, el]) => {
       if (el) el.style.display = key === page ? "block" : "none";
     });
-    document.querySelectorAll(".primary-nav__btn").forEach((b) => {
+    document.querySelectorAll(".hamburger-item[data-page]").forEach((b) => {
       b.classList.toggle("active", b.dataset.page === page);
     });
     // Footer only visible on Jobs page
     if (stickyFooter) stickyFooter.style.display = page === "jobs" ? "block" : "none";
+    closeMenu();
   }
 
-  document.querySelectorAll(".primary-nav__btn").forEach((btn) => {
+  document.querySelectorAll(".hamburger-item[data-page]").forEach((btn) => {
     btn.addEventListener("click", () => switchPage(btn.dataset.page));
   });
 
@@ -550,7 +577,7 @@ function setupTabs() {
     tab.addEventListener("click", () => switchSubTab(tab.dataset.tab));
   });
 
-  // Expose switchPage/switchSubTab for use by navigateToQuote etc.
+  // Expose for use by navigateToQuote etc.
   window._switchPage   = switchPage;
   window._switchSubTab = switchSubTab;
 }

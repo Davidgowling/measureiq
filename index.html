@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MeasureIQ — Smart Flooring Calculator</title>
   <link rel="icon" type="image/png" href="assets/favicon.png" />
-  <link rel="stylesheet" href="style.css?v=9" />
+  <link rel="stylesheet" href="style.css?v=10" />
 </head>
 
 <body>
@@ -92,22 +92,26 @@
 
     <!-- TOP BAR -->
     <div class="topbar no-print">
-      <div class="brand">
+      <div class="topbar__left">
+        <button id="hamburgerBtn" class="hamburger-btn" aria-label="Open menu" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
+        <div id="hamburgerMenu" class="hamburger-menu" style="display:none;">
+          <button class="hamburger-item active" data-page="jobs">Jobs</button>
+          <button class="hamburger-item" data-page="accessories">Accessories</button>
+          <button class="hamburger-item" data-page="profile">Business Profile</button>
+          <div class="hamburger-divider"></div>
+          <div class="hamburger-user">
+            <span id="authStatus">Not signed in</span>
+            <button id="logoutBtn" class="hamburger-item hamburger-logout" style="display:none;">Logout</button>
+          </div>
+        </div>
+      </div>
+      <div class="topbar__right">
+        <span id="saveStatus" class="save-status"></span>
         <img src="assets/logo-white-web.png" alt="MeasureIQ" class="topbar__logo" />
       </div>
-      <div class="auth">
-        <span id="saveStatus" class="save-status"></span>
-        <span id="authStatus" class="muted">Not signed in</span>
-        <button id="logoutBtn" class="btn danger" style="display:none;">Logout</button>
-      </div>
     </div>
-
-    <!-- PRIMARY NAVIGATION -->
-    <nav class="primary-nav no-print" id="primaryNav">
-      <button class="primary-nav__btn active" data-page="jobs">Jobs</button>
-      <button class="primary-nav__btn" data-page="accessories">Accessories</button>
-      <button class="primary-nav__btn" data-page="profile">Business Profile</button>
-    </nav>
 
     <!-- ======================================================
          PAGE: JOBS (Customer sidebar + Calculator + Quote)
@@ -342,6 +346,6 @@
 
   </div>
 
-  <script src="script.js?v=7"></script>
+  <script src="script.js?v=8"></script>
 </body>
 </html>
