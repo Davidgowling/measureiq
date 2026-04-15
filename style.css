@@ -548,7 +548,7 @@ body {
 
 /* Topbar logo */
 .topbar__logo {
-  height: 80px;
+  height: 100px;
   width: auto;
   mix-blend-mode: screen;
 }
@@ -1434,10 +1434,10 @@ textarea:focus {
   }
 
   .topbar {
-    padding: 8px 12px;
+    padding: 6px 12px;
   }
   .topbar__logo {
-    height: 64px;
+    height: 88px;
   }
   .hamburger-user #authStatus {
     font-size: 0.75rem;
