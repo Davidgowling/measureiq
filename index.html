@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MeasureIQ — Smart Flooring Calculator</title>
   <link rel="icon" type="image/png" href="assets/favicon.png" />
-  <link rel="stylesheet" href="style.css?v=18" />
+  <link rel="stylesheet" href="style.css?bust=20260415" />
 </head>
 
 <body>
@@ -146,12 +146,34 @@
 
       <!-- ── CUSTOMER HUB: find / create customers ── -->
       <div id="customerHub" class="customer-hub no-print">
-        <div class="hub-header">
-          <h2>Customers</h2>
-          <button id="newCustomerBtn" class="btn primary">+ New Customer</button>
+
+        <!-- Dashboard banner -->
+        <div class="dash-banner">
+          <div class="dash-banner__top">
+            <span id="dashGreeting" class="dash-greeting">Welcome back</span>
+            <span id="dashDate" class="dash-date"></span>
+          </div>
+          <div id="dashBusinessName" class="dash-business"></div>
+          <div class="dash-stats">
+            <div class="dash-stat">
+              <span id="dashCustomerCount" class="dash-stat__value">0</span>
+              <span class="dash-stat__label">Customers</span>
+            </div>
+            <div class="dash-stat">
+              <span id="dashTotalValue" class="dash-stat__value">£0</span>
+              <span class="dash-stat__label">Total quoted</span>
+            </div>
+          </div>
+          <button id="newCustomerBtn" class="btn dash-cta">+ New Customer</button>
         </div>
-        <input type="search" id="customerSearch" placeholder="Search by name or job reference…" class="customer-search hub-search" aria-label="Search customers" />
-        <ul id="savedCustomersList" class="hub-customer-list"></ul>
+
+        <!-- Customer list -->
+        <div class="hub-list-section">
+          <h3 class="hub-list-title">Your Customers</h3>
+          <input type="search" id="customerSearch" placeholder="Search by name or job reference…" class="customer-search hub-search" aria-label="Search customers" />
+          <ul id="savedCustomersList" class="hub-customer-list"></ul>
+        </div>
+
       </div>
 
       <!-- ── JOB VIEW: focused on one customer ── -->
@@ -440,6 +462,6 @@
     </div>
   </div>
 
-  <script src="script.js?v=15"></script>
+  <script src="script.js?bust=20260415"></script>
 </body>
 </html>

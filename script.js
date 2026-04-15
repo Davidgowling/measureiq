@@ -1688,6 +1688,33 @@ function autoUpdateCurrentCustomer() {
 }
 
 /** Render the saved customers list from a cloud data object (no fetch needed) */
+function updateDashboard(customers) {
+  // Greeting
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+  const el = document.getElementById("dashGreeting");
+  if (el) el.textContent = greeting;
+
+  // Business name
+  const nameEl = document.getElementById("dashBusinessName");
+  if (nameEl) nameEl.textContent = businessProfile?.businessName || authUser?.email || "";
+
+  // Date
+  const dateEl = document.getElementById("dashDate");
+  if (dateEl) dateEl.textContent = new Date().toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
+
+  // Stats
+  const countEl = document.getElementById("dashCustomerCount");
+  if (countEl) countEl.textContent = customers.length;
+
+  const totalValue = customers.reduce((sum, c) => {
+    if (!Array.isArray(c.rooms)) return sum;
+    return sum + c.rooms.reduce((rs, r) => rs + (r.data?.lineTotal || 0), 0);
+  }, 0);
+  const valEl = document.getElementById("dashTotalValue");
+  if (valEl) valEl.textContent = "£" + Math.round(totalValue).toLocaleString("en-GB");
+}
+
 function renderSavedCustomersList(cloud) {
   const list = document.getElementById("savedCustomersList");
   list.innerHTML = "";
@@ -1695,6 +1722,8 @@ function renderSavedCustomersList(cloud) {
   if (!isSignedIn() || !cloud) return;
 
   const customers = Array.isArray(cloud.customers) ? cloud.customers : [];
+  updateDashboard(customers);
+
   const query = (document.getElementById("customerSearch")?.value || "").trim().toLowerCase();
 
   const filtered = customers
