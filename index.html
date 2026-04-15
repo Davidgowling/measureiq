@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MeasureIQ — Smart Flooring Calculator</title>
   <link rel="icon" type="image/png" href="assets/favicon.png" />
-  <link rel="stylesheet" href="style.css?v=10" />
+  <link rel="stylesheet" href="style.css?v=11" />
 </head>
 
 <body>
@@ -97,13 +97,14 @@
           <span></span><span></span><span></span>
         </button>
         <div id="hamburgerMenu" class="hamburger-menu" style="display:none;">
+          <div class="hamburger-section-label">Navigation</div>
           <button class="hamburger-item active" data-page="jobs">Jobs</button>
           <button class="hamburger-item" data-page="accessories">Accessories</button>
           <button class="hamburger-item" data-page="profile">Business Profile</button>
           <div class="hamburger-divider"></div>
           <div class="hamburger-user">
             <span id="authStatus">Not signed in</span>
-            <button id="logoutBtn" class="hamburger-item hamburger-logout" style="display:none;">Logout</button>
+            <button id="logoutBtn" style="display:none;">Logout</button>
           </div>
         </div>
       </div>
@@ -114,126 +115,135 @@
     </div>
 
     <!-- ======================================================
-         PAGE: JOBS (Customer sidebar + Calculator + Quote)
+         PAGE: JOBS
          ====================================================== -->
     <div id="pageJobs" class="page-view">
-      <div class="layout">
 
-        <!-- LEFT COLUMN: Customer Details + Rooms -->
-        <div class="project no-print">
-          <h2>Customer Details</h2>
+      <!-- ── CUSTOMER HUB: find / create customers ── -->
+      <div id="customerHub" class="customer-hub no-print">
+        <div class="hub-header">
+          <h2>Customers</h2>
+          <button id="newCustomerBtn" class="btn primary">+ New Customer</button>
+        </div>
+        <input type="search" id="customerSearch" placeholder="Search by name or job reference…" class="customer-search hub-search" aria-label="Search customers" />
+        <ul id="savedCustomersList" class="hub-customer-list"></ul>
+      </div>
 
-          <label for="customerName">Customer Name</label>
-          <input type="text" id="customerName" placeholder="Enter Name Here" />
+      <!-- ── JOB VIEW: focused on one customer ── -->
+      <div id="jobView" class="job-view" style="display:none;">
 
-          <label for="jobRef">Job Reference</label>
-          <input type="text" id="jobRef" placeholder="Tip: First line of address" />
-
-          <div class="customer-actions">
-            <button id="saveCustomerBtn" class="btn primary">Save Customer</button>
-            <button id="newCustomerBtn" class="btn secondary">New Customer</button>
+        <!-- Job header: back · editable name/ref · save -->
+        <div class="job-header no-print">
+          <button id="backToCustomersBtn" class="btn-back">← Customers</button>
+          <div class="job-identity">
+            <input id="customerName" class="job-name-input" placeholder="Customer name" />
+            <input id="jobRef" class="job-ref-input" placeholder="Job reference / address" />
           </div>
-
-          <h3>Saved Customers</h3>
-          <input type="search" id="customerSearch" placeholder="Search customers…" class="customer-search" aria-label="Search saved customers" />
-          <ul id="savedCustomersList" class="saved-list"></ul>
-
-          <h2>Rooms</h2>
-          <button id="addRoomBtn" class="btn secondary full-width">+ Add Room</button>
-          <div id="roomList" class="room-list-vertical"></div>
+          <button id="saveCustomerBtn" class="btn primary">Save</button>
         </div>
 
-        <!-- RIGHT COLUMN: Calculator + Quote -->
-        <div class="right-column">
+        <div class="layout">
 
-          <!-- Sub-tabs -->
-          <div class="subtabs no-print">
-            <button class="subtab active" data-tab="calculatorSection">Room Calculator</button>
-            <button class="subtab" data-tab="quoteSection">Quote Builder</button>
+          <!-- LEFT: Rooms -->
+          <div class="project no-print">
+            <h2>Rooms</h2>
+            <button id="addRoomBtn" class="btn secondary full-width">+ Add Room</button>
+            <div id="roomList" class="room-list-vertical"></div>
           </div>
 
-          <!-- TAB: ROOM CALCULATOR -->
-          <div id="calculatorSection" class="tab-panel">
-            <div class="calculator" id="roomCalculator">
-              <div id="noRoomMessage" class="muted">
-                Add a room on the left to begin.
-              </div>
+          <!-- RIGHT: Calculator + Quote -->
+          <div class="right-column">
 
-              <div id="roomForm" style="display:none;">
+            <div class="subtabs no-print">
+              <button class="subtab active" data-tab="calculatorSection">Room Calculator</button>
+              <button class="subtab" data-tab="quoteSection">Quote Builder</button>
+            </div>
 
-                <div class="room-header">
-                  <h2 id="roomTitle">No room selected</h2>
-                  <div class="room-actions">
-                    <button id="editRoomBtn" class="btn secondary">Rename</button>
-                    <button id="deleteRoomBtn" class="btn danger">Delete</button>
-                  </div>
+            <!-- TAB: ROOM CALCULATOR -->
+            <div id="calculatorSection" class="tab-panel">
+              <div class="calculator" id="roomCalculator">
+                <div id="noRoomMessage" class="muted">
+                  Add a room on the left to begin.
                 </div>
 
-                <div class="panel" style="margin-top:10px;">
-                  <h3>Room Dimensions</h3>
+                <div id="roomForm" style="display:none;">
 
-                  <label for="length">Room Length (m)</label>
-                  <input type="number" id="length" step="0.01" min="0" />
-
-                  <label for="widthInput" id="widthLabel">Room Width (m)</label>
-                  <input type="number" id="widthInput" step="0.01" min="0" />
-
-                  <div class="muted tiny" style="margin-top:8px;">
-                    Room area auto-calculates from Length × Width and is used as the default Qty for sqm-based line items (editable per line).
-                  </div>
-                </div>
-
-                <div class="panel" style="margin-top:10px;">
-                  <div class="line-items-header">
-                    <h3 style="margin:0;">Room Line Items</h3>
-                    <div class="muted tiny">
-                      Each line shows Qty + Unit Price so you can see exactly how totals are built. Override anytime.
+                  <div class="room-header">
+                    <h2 id="roomTitle">No room selected</h2>
+                    <div class="room-actions">
+                      <button id="editRoomBtn" class="btn secondary">Rename</button>
+                      <button id="deleteRoomBtn" class="btn danger">Delete</button>
                     </div>
                   </div>
 
-                  <div id="roomLineItems"></div>
+                  <div class="panel" style="margin-top:10px;">
+                    <h3>Room Dimensions</h3>
 
-                  <div class="line-items-actions no-print">
-                    <button id="addCustomLineBtn" class="btn secondary">+ Add custom line</button>
+                    <label for="length">Room Length (m)</label>
+                    <input type="number" id="length" step="0.01" min="0" />
+
+                    <label for="widthInput" id="widthLabel">Room Width (m)</label>
+                    <input type="number" id="widthInput" step="0.01" min="0" />
+
+                    <div class="muted tiny" style="margin-top:8px;">
+                      Room area auto-calculates from Length × Width and is used as the default Qty for sqm-based line items (editable per line).
+                    </div>
+                  </div>
+
+                  <div class="panel" style="margin-top:10px;">
+                    <div class="line-items-header">
+                      <h3 style="margin:0;">Room Line Items</h3>
+                      <div class="muted tiny">
+                        Each line shows Qty + Unit Price so you can see exactly how totals are built. Override anytime.
+                      </div>
+                    </div>
+
+                    <div id="roomLineItems"></div>
+
+                    <div class="line-items-actions no-print">
+                      <button id="addCustomLineBtn" class="btn secondary">+ Add custom line</button>
+                    </div>
+                  </div>
+
+                  <button id="calculateBtn" class="btn primary full-width">Calculate &amp; Save</button>
+                  <div id="roomSavedMsg" class="small-note"></div>
+
+                  <div id="result" class="result"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- TAB: QUOTE BUILDER -->
+            <div id="quoteSection" class="tab-panel" style="display:none;">
+              <div id="quoteBuilder" class="summary">
+                <h2>Customer Quote</h2>
+
+                <div class="quote-controls no-print">
+                  <div class="quote-toggle">
+                    <label>
+                      <input type="checkbox" id="quoteShowLineItems">
+                      Show line items (per room) on customer quote
+                    </label>
                   </div>
                 </div>
 
-                <button id="calculateBtn" class="btn primary full-width">Calculate &amp; Save</button>
-                <div id="roomSavedMsg" class="small-note"></div>
+                <div id="quoteContent" class="quote-content"></div>
 
-                <div id="result" class="result"></div>
-              </div>
-            </div>
-          </div>
-
-          <!-- TAB: QUOTE BUILDER -->
-          <div id="quoteSection" class="tab-panel" style="display:none;">
-            <div id="quoteBuilder" class="summary">
-              <h2>Customer Quote</h2>
-
-              <div class="quote-controls no-print">
-                <div class="quote-toggle">
-                  <label>
-                    <input type="checkbox" id="quoteShowLineItems">
-                    Show line items (per room) on customer quote
-                  </label>
+                <div class="quote-notes no-print">
+                  <label for="quoteNotes">Notes / Terms</label>
+                  <textarea id="quoteNotes" rows="4" placeholder="e.g. Quote valid for 30 days, subfloor preparation excluded unless stated..."></textarea>
                 </div>
+
+                <button id="quotePrintBtn" class="btn secondary no-print">Print / PDF Customer Quote</button>
               </div>
-
-              <div id="quoteContent" class="quote-content"></div>
-
-              <div class="quote-notes no-print">
-                <label for="quoteNotes">Notes / Terms</label>
-                <textarea id="quoteNotes" rows="4" placeholder="e.g. Quote valid for 30 days, subfloor preparation excluded unless stated..."></textarea>
-              </div>
-
-              <button id="quotePrintBtn" class="btn secondary no-print">Print / PDF Customer Quote</button>
             </div>
-          </div>
 
+          </div>
         </div>
       </div>
+
     </div>
+
 
     <!-- ======================================================
          PAGE: ACCESSORIES PRICING (standalone, full-width)
@@ -346,6 +356,6 @@
 
   </div>
 
-  <script src="script.js?v=8"></script>
+  <script src="script.js?v=9"></script>
 </body>
 </html>
