@@ -718,11 +718,106 @@ textarea:focus {
 #loginBtn:hover { background: var(--dms-blue-hover); }
 
 /* -------------------------------------------------------
-   CUSTOMER HUB
+   CUSTOMER HUB + DASHBOARD
 -------------------------------------------------------- */
 .customer-hub {
   max-width: 720px;
   margin: 0 auto;
+}
+
+/* Dashboard banner */
+.dash-banner {
+  background: linear-gradient(135deg, #23243a 0%, var(--dms-dark) 100%);
+  border-radius: 16px;
+  padding: 22px 22px 18px;
+  margin-bottom: 24px;
+  color: #fff;
+}
+
+.dash-banner__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 4px;
+}
+
+.dash-greeting {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: rgba(255,255,255,0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.dash-date {
+  font-size: 0.78rem;
+  color: rgba(255,255,255,0.4);
+}
+
+.dash-business {
+  font-size: 1.45rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 18px;
+  min-height: 1.8rem;
+}
+
+.dash-stats {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.dash-stat {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  padding: 10px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 90px;
+}
+
+.dash-stat__value {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--dms-green);
+  line-height: 1;
+}
+
+.dash-stat__label {
+  font-size: 0.72rem;
+  color: rgba(255,255,255,0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.dash-cta {
+  background: var(--dms-green);
+  color: var(--dms-dark);
+  font-weight: 700;
+  border: none;
+  padding: 11px 22px;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  width: 100%;
+  transition: background 0.15s;
+}
+
+.dash-cta:hover { background: var(--dms-green-hover); }
+
+/* Customer list section */
+.hub-list-section { margin-top: 4px; }
+
+.hub-list-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--dms-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin: 0 0 10px;
 }
 
 .hub-header {
