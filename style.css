@@ -1092,16 +1092,16 @@ textarea:focus {
   margin: 6px 0;
 }
 
-/* Account section at the bottom */
+/* Account section at the bottom — no extra left padding so items align with nav */
 .hamburger-user {
-  padding: 8px 18px 14px;
+  padding: 4px 0 6px;
 }
 
 .hamburger-user #authStatus {
   display: block;
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   color: var(--dms-muted);
-  margin-bottom: 2px;
+  padding: 6px 18px 4px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
