@@ -1221,6 +1221,14 @@ textarea:focus {
     margin: 14mm 14mm 14mm 14mm;
   }
 
+  /* Force the document to render at A4 width.
+     iOS Safari prints at the phone viewport (~390px) by default,
+     making width:100% resolve to the screen width, not the paper.
+     Setting min-width here makes everything expand to fill the page. */
+  html {
+    min-width: 210mm;
+  }
+
   body {
     background: #ffffff;
     padding: 0;
