@@ -346,9 +346,17 @@
           </p>
 
           <div class="bp-grid">
-            <div>
-              <label for="bpLogoUrl">Logo URL (optional)</label>
-              <input type="text" id="bpLogoUrl" placeholder="https://yourdomain/logo.png">
+            <div class="bp-logo-field">
+              <label>Business Logo (optional)</label>
+              <div class="bp-logo-upload">
+                <div id="bpLogoPreview" class="bp-logo-preview" style="display:none;">
+                  <img id="bpLogoImg" src="" alt="Business logo">
+                  <button type="button" id="bpLogoRemoveBtn" class="btn-remove-logo">Remove</button>
+                </div>
+                <label for="bpLogoFile" class="btn secondary bp-logo-label">Choose Logo&hellip;</label>
+                <input type="file" id="bpLogoFile" accept="image/png,image/jpeg,image/jpg,image/gif,image/webp,image/svg+xml" style="display:none;">
+                <span class="muted bp-logo-hint">PNG, JPG, WebP or SVG &bull; Max 2 MB</span>
+              </div>
             </div>
             <div>
               <label for="bpBusinessName">Business Name</label>

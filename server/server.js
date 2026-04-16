@@ -97,6 +97,9 @@ async function initDB() {
   await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS plan_expires_at TIMESTAMP NULL`);
   await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS plan_note TEXT NULL`);
 
+  // Logo column — stored separately to keep main data payloads small
+  await pool.query(`ALTER TABLE user_data ADD COLUMN IF NOT EXISTS logo TEXT NULL`);
+
   console.log("✅ Database ready");
 }
 
@@ -312,6 +315,38 @@ app.patch("/api/admin/users/:id/plan", authenticate, requireAdmin, async (req, r
 });
 
 // --------------------------------------------------
+<<<<<<< HEAD
+// LOGO ROUTES
+// --------------------------------------------------
+app.get("/api/logo", authenticate, async (req, res) => {
+  const r = await pool.query("SELECT logo FROM user_data WHERE user_id=$1", [req.user.id]);
+  res.json({ logo: r.rows[0]?.logo || null });
+});
+
+app.post("/api/logo", authenticate, async (req, res) => {
+  const { logo } = req.body;
+
+  if (logo !== null && logo !== undefined) {
+    if (typeof logo !== "string" || !/^data:image\/(png|jpe?g|gif|webp|svg\+xml);base64,/.test(logo)) {
+      return res.status(400).json({ error: "Invalid image format. Use PNG, JPG, GIF, WebP or SVG." });
+    }
+    // ~2MB limit (base64 adds ~33% overhead so allow up to 2.7MB string length)
+    if (logo.length > 2.7 * 1024 * 1024) {
+      return res.status(400).json({ error: "Logo must be under 2MB." });
+    }
+  }
+
+  await pool.query(
+    `INSERT INTO user_data (user_id, logo) VALUES ($1,$2)
+     ON CONFLICT (user_id) DO UPDATE SET logo=EXCLUDED.logo`,
+    [req.user.id, logo || null]
+  );
+  res.json({ ok: true });
+});
+
+// --------------------------------------------------
+=======
+>>>>>>> origin/main
 app.get("*", (req, res) => {
   res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
   res.sendFile(path.join(__dirname, "..", "index.html"));
