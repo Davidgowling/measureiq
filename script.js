@@ -279,18 +279,54 @@ async function apiFetch(path, options = {}) {
   return data;
 }
 
+// --------------------------------------------------
+// PLAN / ACCESS CONTROL
+// --------------------------------------------------
+const FREE_CUSTOMER_LIMIT = 3;
+
+function isPro() {
+  const plan = authUser?.plan;
+  return plan === "pro" || plan === "admin";
+}
+
+function isAdmin() {
+  return authUser?.plan === "admin";
+}
+
+function canAccess(feature) {
+  if (isPro()) return true;
+  // Features available on free plan
+  const freeFeatures = ["basic_customers", "basic_rooms", "basic_quote"];
+  return freeFeatures.includes(feature);
+}
+
 function setAuthUI() {
   const status = document.getElementById("authStatus");
   const logoutBtn = document.getElementById("logoutBtn");
+  const planBadge = document.getElementById("planBadge");
+  const adminItem = document.querySelector(".hamburger-item[data-page='admin']");
 
   const signedIn = !!authUser;
 
   if (signedIn) {
     status.textContent = authUser.email || "user";
     logoutBtn.style.display = "block";
+
+    // Plan badge
+    const plan = authUser.plan || "free";
+    if (planBadge) {
+      planBadge.textContent = plan.toUpperCase();
+      planBadge.className = `plan-badge plan-badge--${plan}`;
+      planBadge.style.display = "inline-block";
+    }
+
+    // Show Admin nav item only for admins
+    if (adminItem) adminItem.style.display = isAdmin() ? "" : "none";
   } else {
     status.textContent = "Not signed in";
     logoutBtn.style.display = "none";
+    if (planBadge) planBadge.style.display = "none";
+    if (adminItem) adminItem.style.display = "none";
   }
 }
 
@@ -334,7 +370,7 @@ async function hydrateAuthUser() {
 
   try {
     const me = await apiFetch("/api/me", { method: "GET" });
-    authUser = { email: me.email };
+    authUser = { email: me.email, plan: me.plan || "free" };
   } catch (e) {
     setToken(null);
     authUser = null;
@@ -605,6 +641,7 @@ function setupTabs() {
   const pages = {
     jobs:        document.getElementById("pageJobs"),
     accessories: document.getElementById("pageAccessories"),
+    admin:       document.getElementById("pageAdmin"),
     profile:     document.getElementById("pageProfile"),
   };
   const stickyFooter  = document.getElementById("stickyFooter");
@@ -639,6 +676,7 @@ function setupTabs() {
     Object.entries(pages).forEach(([key, el]) => {
       if (el) el.style.display = key === page ? "block" : "none";
     });
+    if (page === "admin") renderAdminPage();
     document.querySelectorAll(".hamburger-item[data-page]").forEach((b) => {
       b.classList.toggle("active", b.dataset.page === page);
     });
@@ -984,6 +1022,75 @@ function unitSelectHtml(id, selected) {
   const units = ["sqm", "lm", "item", "each", "box"];
   const opts = units.map(u => `<option value="${u}"${u === selected ? " selected" : ""}>${unitLabel(u) || u}</option>`).join("");
   return `<select class="acc-custom-unit" aria-label="Unit">${opts}</select>`;
+}
+
+// --------------------------------------------------
+// ADMIN PAGE
+// NOTE: user_data is never deleted when plan changes — all customer/room/quote
+// data is preserved and instantly restored if the user upgrades again.
+// --------------------------------------------------
+async function renderAdminPage() {
+  const container = document.getElementById("adminUserList");
+  if (!container) return;
+  container.innerHTML = `<p class="muted">Loading users…</p>`;
+
+  try {
+    const users = await apiFetch("/api/admin/users", { method: "GET" });
+
+    const now = Date.now();
+    const WARN_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+
+    const rows = users.map((u) => {
+      const expiry = u.plan_expires_at ? new Date(u.plan_expires_at) : null;
+      const expiryStr = expiry ? expiry.toLocaleDateString("en-GB") : "";
+      const expiringSoon = expiry && (expiry.getTime() - now) < WARN_MS && expiry.getTime() > now;
+      const expired = expiry && expiry.getTime() < now;
+
+      return `
+        <div class="admin-user-row${expiringSoon ? " admin-user-row--warn" : ""}${expired ? " admin-user-row--expired" : ""}" data-id="${u.id}">
+          <div class="admin-user-info">
+            <span class="admin-user-email">${escapeHtml(u.email)}</span>
+            <span class="admin-user-joined">Joined ${new Date(u.created_at).toLocaleDateString("en-GB")}</span>
+            ${expiringSoon ? `<span class="admin-user-warning">⚠ Expires ${expiryStr}</span>` : ""}
+            ${expired ? `<span class="admin-user-warning">Expired ${expiryStr}</span>` : ""}
+          </div>
+          <div class="admin-user-controls">
+            <select class="admin-plan-select" data-id="${u.id}">
+              <option value="free"${u.plan === "free" ? " selected" : ""}>Free</option>
+              <option value="pro"${u.plan === "pro" ? " selected" : ""}>Pro</option>
+              <option value="admin"${u.plan === "admin" ? " selected" : ""}>Admin</option>
+            </select>
+            <input type="date" class="admin-expiry-input" data-id="${u.id}"
+              value="${expiry ? expiry.toISOString().split("T")[0] : ""}"
+              title="Leave blank for permanent access" />
+            <input type="text" class="admin-note-input" data-id="${u.id}"
+              value="${escapeHtml(u.plan_note || "")}"
+              placeholder="Note (e.g. trade customer)" />
+            <button class="btn primary admin-save-btn" data-id="${u.id}">Save</button>
+          </div>
+        </div>`;
+    }).join("");
+
+    container.innerHTML = rows || `<p class="muted">No users found.</p>`;
+
+    container.querySelectorAll(".admin-save-btn").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const id = btn.dataset.id;
+        const plan = container.querySelector(`.admin-plan-select[data-id="${id}"]`).value;
+        const expiryVal = container.querySelector(`.admin-expiry-input[data-id="${id}"]`).value;
+        const note = container.querySelector(`.admin-note-input[data-id="${id}"]`).value.trim();
+        btn.textContent = "Saving…";
+        await apiFetch(`/api/admin/users/${id}/plan`, {
+          method: "PATCH",
+          body: JSON.stringify({ plan, plan_expires_at: expiryVal || null, plan_note: note }),
+        });
+        btn.textContent = "Saved ✓";
+        setTimeout(() => { btn.textContent = "Save"; }, 2000);
+      });
+    });
+  } catch (e) {
+    container.innerHTML = `<p class="muted">Failed to load users.</p>`;
+  }
 }
 
 function renderAccessoriesPricingPanel() {
@@ -1649,6 +1756,18 @@ async function saveCustomer() {
   // OPTIMISED: use cache, no re-fetch
   const cloud = await getCloudData();
   const customers = Array.isArray(cloud.customers) ? cloud.customers : [];
+
+  // Free tier limit — block new customers over the limit
+  const isExisting = customers.some((c) => c.name === name);
+  if (!isExisting && !isPro() && customers.length >= FREE_CUSTOMER_LIMIT) {
+    const ss = document.getElementById("saveStatus");
+    if (ss) {
+      ss.textContent = "⚡ Upgrade to Pro for unlimited customers";
+      ss.className = "save-status save-status--warn";
+      setTimeout(() => { ss.textContent = ""; ss.className = "save-status"; }, 4000);
+    }
+    return;
+  }
 
   const idx = customers.findIndex((c) => c.name === name);
   if (idx >= 0) customers[idx] = record;
