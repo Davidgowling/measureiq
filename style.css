@@ -1016,6 +1016,66 @@ textarea:focus {
 .job-ref-input:focus { border-bottom-color: var(--dms-blue); }
 .job-ref-input::placeholder { color: var(--dms-border); }
 
+/* ---- Job status selector ---- */
+.job-status-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--dms-border-lt);
+  flex-wrap: wrap;
+}
+
+.job-status-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--dms-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.job-status-btns {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.status-btn {
+  padding: 5px 14px;
+  border-radius: 20px;
+  border: 1.5px solid var(--dms-border);
+  background: #fff;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--dms-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.status-btn:hover { border-color: var(--dms-dark); color: var(--dms-dark); }
+
+.status-btn.active[data-status="open"]     { background: #f0f1f5; border-color: #9295a8; color: #4a4d63; }
+.status-btn.active[data-status="quoted"]   { background: #e8f6fc; border-color: var(--dms-blue); color: var(--dms-blue); }
+.status-btn.active[data-status="accepted"] { background: #f0fce8; border-color: #5cb85c; color: #3d7a3d; }
+.status-btn.active[data-status="complete"] { background: #1c2537; border-color: #1c2537; color: #fff; }
+
+/* Status pill on hub cards */
+.hcc-status {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 2px 9px;
+  border-radius: 20px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.hcc-status--open     { background: #f0f1f5; color: #6b6e80; }
+.hcc-status--quoted   { background: #e8f6fc; color: var(--dms-blue); }
+.hcc-status--accepted { background: #f0fce8; color: #3d7a3d; }
+.hcc-status--complete { background: #1c2537; color: #fff; }
+
 /* ---- Customer contact details ---- */
 .contact-grid {
   display: grid;
