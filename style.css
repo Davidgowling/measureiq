@@ -1255,6 +1255,63 @@ textarea:focus {
   text-overflow: ellipsis;
 }
 
+/* Plan badge in hamburger */
+.plan-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  padding: 2px 8px;
+  border-radius: 20px;
+  margin: 0 18px 6px;
+}
+.plan-badge--free    { background: var(--dms-border); color: var(--dms-muted); }
+.plan-badge--pro     { background: var(--dms-green); color: var(--dms-dark); }
+.plan-badge--admin   { background: var(--dms-blue); color: #fff; }
+
+/* ---- ADMIN PAGE ---- */
+.admin-panel { max-width: 860px; }
+
+.admin-user-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--dms-border-lt);
+}
+
+.admin-user-row--warn  { background: rgba(197,206,16,0.06); border-radius: 8px; padding: 10px; }
+.admin-user-row--expired { opacity: 0.55; }
+
+.admin-user-info {
+  flex: 1;
+  min-width: 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.admin-user-email  { font-weight: 600; font-size: 0.9rem; }
+.admin-user-joined { font-size: 0.78rem; color: var(--dms-muted); }
+.admin-user-warning { font-size: 0.78rem; color: var(--dms-pink); font-weight: 600; }
+
+.admin-user-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-plan-select, .admin-expiry-input, .admin-note-input {
+  padding: 6px 10px;
+  border: 1px solid var(--dms-border);
+  border-radius: 7px;
+  font-size: 0.85rem;
+  background: #fff;
+}
+
+.admin-note-input { min-width: 160px; }
+
 /* Logout — same style as nav items */
 #logoutBtn {
   display: flex;
@@ -2004,6 +2061,7 @@ body.locked .layout {
 .save-status--saving  { color: var(--dms-blue); }
 .save-status--saved   { color: var(--dms-green); }
 .save-status--error   { color: var(--dms-pink); font-weight: 600; }
+.save-status--warn    { color: var(--dms-blue); font-weight: 600; }
 
 /* ---------- SCROLLBAR (subtle brand touch) ---------- */
 ::-webkit-scrollbar { width: 8px; }

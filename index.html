@@ -124,9 +124,11 @@
           <button class="hamburger-item active" data-page="jobs" data-view="hub">Customers</button>
           <button class="hamburger-item" data-page="accessories">Accessories</button>
           <button class="hamburger-item" data-page="profile">Business Profile</button>
+          <button class="hamburger-item admin-only" data-page="admin" style="display:none;">Admin</button>
           <div class="hamburger-divider"></div>
           <div class="hamburger-user">
             <span id="authStatus">Not signed in</span>
+            <span id="planBadge" class="plan-badge" style="display:none;"></span>
             <button id="logoutBtn" style="display:none;">Logout</button>
           </div>
         </div>
@@ -393,6 +395,19 @@
 
           <button id="saveBusinessProfileBtn" class="btn primary">Save Business Profile</button>
           <span id="businessSavedMsg" class="small-note"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================================================
+         PAGE: ADMIN (admin accounts only)
+         ====================================================== -->
+    <div id="pageAdmin" class="page-view" style="display:none;">
+      <div class="page-container">
+        <div class="panel admin-panel">
+          <h2>User Management</h2>
+          <p class="muted">Manage plans and grant Pro access to users. Gifted Pro accounts should always have an expiry date.</p>
+          <div id="adminUserList"></div>
         </div>
       </div>
     </div>

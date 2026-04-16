@@ -92,7 +92,31 @@ async function initDB() {
     )
   `);
 
+  // Plan columns — safe to run on existing DBs
+  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS plan VARCHAR(20) DEFAULT 'free' NOT NULL`);
+  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS plan_expires_at TIMESTAMP NULL`);
+  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS plan_note TEXT NULL`);
+
   console.log("✅ Database ready");
+}
+
+// --------------------------------------------------
+// PLAN HELPERS
+// --------------------------------------------------
+const ADMIN_EMAILS = new Set(
+  (process.env.ADMIN_EMAILS || "").split(",").map(e => e.trim().toLowerCase()).filter(Boolean)
+);
+
+const FREE_LIMITS = { customers: 3 };
+
+/** Resolve the effective plan for a DB user row, handling expiry */
+function effectivePlan(user) {
+  if (ADMIN_EMAILS.has((user.email || "").toLowerCase())) return "admin";
+  const plan = user.plan || "free";
+  if (plan === "pro" && user.plan_expires_at && new Date(user.plan_expires_at) < new Date()) {
+    return "free";
+  }
+  return plan;
 }
 
 // --------------------------------------------------
@@ -127,11 +151,13 @@ app.post("/api/auth/register", authLimiter, async (req, res) => {
   const id = crypto.randomUUID();
 
   try {
+    const emailNorm = email.toLowerCase().trim();
     await pool.query(
       "INSERT INTO users (id, email, password) VALUES ($1,$2,$3)",
-      [id, email.toLowerCase().trim(), hash]
+      [id, emailNorm, hash]
     );
-    const token = jwt.sign({ id, email }, JWT_SECRET, { expiresIn: "7d" });
+    const plan = ADMIN_EMAILS.has(emailNorm) ? "admin" : "free";
+    const token = jwt.sign({ id, email: emailNorm, plan }, JWT_SECRET, { expiresIn: "7d" });
     res.json({ token });
   } catch {
     res.status(400).json({ error: "User already exists" });
@@ -152,12 +178,17 @@ app.post("/api/auth/login", authLimiter, async (req, res) => {
   const ok = await bcrypt.compare(password, user.password);
   if (!ok) return res.status(401).json({ error: "Invalid login" });
 
-  const token = jwt.sign({ id: user.id, email }, JWT_SECRET, { expiresIn: "7d" });
+  const plan = effectivePlan(user);
+  // Persist admin promotion if ADMIN_EMAILS matched
+  if (plan === "admin" && user.plan !== "admin") {
+    await pool.query("UPDATE users SET plan='admin' WHERE id=$1", [user.id]);
+  }
+  const token = jwt.sign({ id: user.id, email: user.email, plan }, JWT_SECRET, { expiresIn: "7d" });
   res.json({ token });
 });
 
 app.get("/api/me", authenticate, (req, res) => {
-  res.json({ email: req.user.email });
+  res.json({ email: req.user.email, plan: req.user.plan || "free" });
 });
 
 // --------------------------------------------------
@@ -249,6 +280,33 @@ app.post("/api/save", authenticate, async (req, res) => {
     DO UPDATE SET data=EXCLUDED.data, updated_at=NOW()
     `,
     [req.user.id, req.body]
+  );
+  res.json({ ok: true });
+});
+
+// --------------------------------------------------
+// ADMIN ROUTES
+// --------------------------------------------------
+function requireAdmin(req, res, next) {
+  if (req.user?.plan !== "admin") return res.status(403).json({ error: "Forbidden" });
+  next();
+}
+
+app.get("/api/admin/users", authenticate, requireAdmin, async (req, res) => {
+  const r = await pool.query(`
+    SELECT id, email, plan, plan_expires_at, plan_note, created_at
+    FROM users ORDER BY created_at DESC
+  `);
+  res.json(r.rows);
+});
+
+app.patch("/api/admin/users/:id/plan", authenticate, requireAdmin, async (req, res) => {
+  const { plan, plan_expires_at, plan_note } = req.body;
+  const validPlans = ["free", "pro", "admin"];
+  if (!validPlans.includes(plan)) return res.status(400).json({ error: "Invalid plan" });
+  await pool.query(
+    "UPDATE users SET plan=$1, plan_expires_at=$2, plan_note=$3 WHERE id=$4",
+    [plan, plan_expires_at || null, plan_note || null, req.params.id]
   );
   res.json({ ok: true });
 });
