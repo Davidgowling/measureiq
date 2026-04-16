@@ -8,6 +8,7 @@ let accessoriesDefs = []; // global list with default prices
 let customAccessories = []; // user-defined accessories
 let businessProfile = null;
 let authUser = null;
+let _pendingLogoData = undefined; // undefined=unchanged, null=remove, string=new data URL
 
 const AUTH_TOKEN_KEY = "measureiq_auth_token_v1";
 const API_BASE = "";  // same-origin for local dev
@@ -228,6 +229,28 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Business profile
   document.getElementById("saveBusinessProfileBtn").addEventListener("click", saveBusinessProfile);
+
+  document.getElementById("bpLogoFile").addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      alert("Logo must be under 2MB. Please choose a smaller image.");
+      e.target.value = "";
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      _pendingLogoData = ev.target.result;
+      _showLogoPreview(_pendingLogoData);
+    };
+    reader.readAsDataURL(file);
+  });
+
+  document.getElementById("bpLogoRemoveBtn").addEventListener("click", () => {
+    _pendingLogoData = null;
+    _showLogoPreview(null);
+    document.getElementById("bpLogoFile").value = "";
+  });
 
   // Quote
   document.getElementById("quoteShowLineItems").addEventListener("change", () => renderQuote());
@@ -543,6 +566,7 @@ logoutBtn?.addEventListener("click", () => {
   rooms = [];
   activeRoomId = null;
   businessProfile = null;
+  _pendingLogoData = undefined;
   accessoriesDefs = [];
   customAccessories = [];
 
@@ -550,6 +574,7 @@ logoutBtn?.addEventListener("click", () => {
   clearJobState();
   document.getElementById("savedCustomersList").innerHTML = "";
   document.getElementById("accessoriesPricingList").innerHTML = "";
+  _showLogoPreview(null);
   renderQuote();
 
   setAuthUI();
@@ -606,12 +631,12 @@ async function syncFromCloud() {
   const defaults = {
     businessName: "", contactName: "", address1: "", address2: "",
     town: "", postcode: "", phone: "", email: "", website: "",
-    vatNumber: "", showLineItemsOnQuote: false, defaultNotes: "", logoUrl: "",
+    vatNumber: "", showLineItemsOnQuote: false, defaultNotes: "",
   };
   const savedBP = cloud.businessProfile && typeof cloud.businessProfile === "object"
     ? cloud.businessProfile : null;
   businessProfile = { ...defaults, ...(savedBP || {}) };
-  applyBusinessProfileToUI();
+  await applyBusinessProfileToUI();
 
   // --- Accessory Definitions ---
   const userPrices = cloud.accessoryPrices && typeof cloud.accessoryPrices === "object"
@@ -736,8 +761,7 @@ function navigateToQuote() {
 //------------------------------------------------------
 // BUSINESS PROFILE
 //------------------------------------------------------
-function applyBusinessProfileToUI() {
-  safeSetValue("bpLogoUrl", businessProfile.logoUrl);
+async function applyBusinessProfileToUI() {
   safeSetValue("bpBusinessName", businessProfile.businessName);
   safeSetValue("bpContactName", businessProfile.contactName);
   safeSetValue("bpAddress1", businessProfile.address1);
@@ -763,11 +787,61 @@ function applyBusinessProfileToUI() {
   if (notesArea && notesArea.value.trim() === "" && businessProfile.defaultNotes) {
     notesArea.value = businessProfile.defaultNotes;
   }
+
+  // Load logo from server if signed in and no pending change
+  if (isSignedIn() && _pendingLogoData === undefined) {
+    try {
+      const tok = localStorage.getItem(AUTH_TOKEN_KEY);
+      const r = await fetch("/api/logo", { headers: { Authorization: `Bearer ${tok}` } });
+      if (r.ok) {
+        const { logo } = await r.json();
+        businessProfile.logoData = logo || null;
+      }
+    } catch { /* non-fatal */ }
+  }
+  _showLogoPreview(businessProfile.logoData || null);
+}
+
+function _showLogoPreview(dataUrl) {
+  const preview = document.getElementById("bpLogoPreview");
+  const img = document.getElementById("bpLogoImg");
+  if (!preview || !img) return;
+  if (dataUrl) {
+    img.src = dataUrl;
+    preview.style.display = "flex";
+  } else {
+    img.src = "";
+    preview.style.display = "none";
+  }
 }
 
 async function saveBusinessProfile() {
+  if (!isSignedIn()) { requireAuth(); return; }
+
+  // Upload logo if changed
+  if (_pendingLogoData !== undefined) {
+    try {
+      const tok = localStorage.getItem(AUTH_TOKEN_KEY);
+      const r = await fetch("/api/logo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${tok}` },
+        body: JSON.stringify({ logo: _pendingLogoData }),
+      });
+      if (!r.ok) {
+        const { error } = await r.json().catch(() => ({}));
+        alert(error || "Logo upload failed. Please try a smaller image.");
+        return;
+      }
+      businessProfile.logoData = _pendingLogoData;
+      _pendingLogoData = undefined;
+    } catch {
+      alert("Logo upload failed. Please check your connection and try again.");
+      return;
+    }
+  }
+
   businessProfile = {
-    logoUrl: getValue("bpLogoUrl"),
+    ...businessProfile,
     businessName: getValue("bpBusinessName"),
     contactName: getValue("bpContactName"),
     address1: getValue("bpAddress1"),
@@ -782,17 +856,15 @@ async function saveBusinessProfile() {
     defaultNotes: getValue("bpDefaultNotes"),
   };
 
-  if (!isSignedIn()) { requireAuth(); return; }
-
   // OPTIMISED: merge into cache and flush immediately (no re-fetch)
-  markCloudDirty("businessProfile", businessProfile);
+  const { logoData, ...profileForCloud } = businessProfile;
+  markCloudDirty("businessProfile", profileForCloud);
   await flushSave();
 
   const msg = document.getElementById("businessSavedMsg");
   msg.textContent = "Saved";
   setTimeout(() => { msg.textContent = ""; }, 1500);
 
-  applyBusinessProfileToUI();
   renderQuote();
 }
 
@@ -2095,7 +2167,7 @@ function buildBusinessQuoteHeader() {
   if (!businessProfile) return "";
 
   const {
-    logoUrl,
+    logoData,
     businessName,
     contactName,
     address1,
@@ -2108,8 +2180,8 @@ function buildBusinessQuoteHeader() {
     vatNumber
   } = businessProfile;
 
-  const logoHtml = logoUrl
-    ? `<div class="quote-logo"><img src="${escapeHtml(logoUrl)}" alt="${escapeHtml(businessName || "")}" class="quote-logo__img"></div>`
+  const logoHtml = logoData
+    ? `<div class="quote-logo"><img src="${logoData}" alt="${escapeHtml(businessName || "")}" class="quote-logo__img"></div>`
     : "";
 
   return `

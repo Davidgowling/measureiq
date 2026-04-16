@@ -1645,6 +1645,54 @@ textarea:focus {
   margin-top: 20px;
 }
 
+.bp-logo-field { grid-column: 1 / -1; }
+
+.bp-logo-upload {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.bp-logo-preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.bp-logo-preview img {
+  max-height: 80px;
+  max-width: 220px;
+  object-fit: contain;
+  border: 1px solid var(--dms-border);
+  border-radius: 6px;
+  padding: 6px;
+  background: #fff;
+}
+
+.btn-remove-logo {
+  background: none;
+  border: 1px solid var(--dms-border);
+  border-radius: 4px;
+  padding: 4px 12px;
+  font-size: 0.8rem;
+  color: var(--dms-muted);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn-remove-logo:hover { border-color: #e55; color: #e55; }
+
+.bp-logo-label {
+  display: inline-block;
+  cursor: pointer;
+  width: fit-content;
+}
+
+.bp-logo-hint {
+  font-size: 0.8rem;
+  color: var(--dms-muted);
+}
+
 .bp-notes { margin-top: 12px; }
 
 /* ---------- MISC ---------- */
