@@ -315,6 +315,7 @@ app.patch("/api/admin/users/:id/plan", authenticate, requireAdmin, async (req, r
 });
 
 // --------------------------------------------------
+<<<<<<< HEAD
 // LOGO ROUTES
 // --------------------------------------------------
 app.get("/api/logo", authenticate, async (req, res) => {
@@ -344,6 +345,8 @@ app.post("/api/logo", authenticate, async (req, res) => {
 });
 
 // --------------------------------------------------
+=======
+>>>>>>> origin/main
 app.get("*", (req, res) => {
   res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
   res.sendFile(path.join(__dirname, "..", "index.html"));
