@@ -142,6 +142,14 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("newCustomerBtn").addEventListener("click", newCustomer);
   document.getElementById("backToCustomersBtn")?.addEventListener("click", () => switchJobView("hub"));
 
+  // Job status buttons
+  document.querySelectorAll(".status-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      setJobStatus(btn.dataset.status);
+      autoUpdateCurrentCustomer();
+    });
+  });
+
   // New-customer modal
   document.getElementById("newCustCancelBtn")?.addEventListener("click", () => {
     document.getElementById("newCustModal").style.display = "none";
@@ -1727,6 +1735,27 @@ function buildQuoteLineItems(room) {
 //------------------------------------------------------
 // CUSTOMER SAVE / LOAD (CLOUD-ONLY, OPTIMISED)
 //------------------------------------------------------
+// --------------------------------------------------
+// JOB STATUS
+// --------------------------------------------------
+const JOB_STATUSES = ["open", "quoted", "accepted", "complete"];
+
+function getJobStatus() {
+  const active = document.querySelector(".status-btn.active");
+  return active?.dataset.status || "open";
+}
+
+function setJobStatus(status) {
+  document.querySelectorAll(".status-btn").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.status === status);
+  });
+}
+
+function showJobStatusRow(visible) {
+  const row = document.getElementById("jobStatusRow");
+  if (row) row.style.display = visible ? "flex" : "none";
+}
+
 function readContactFields() {
   return {
     phone:    (document.getElementById("custPhone")?.value    || "").trim(),
@@ -1751,7 +1780,8 @@ async function saveCustomer() {
 
   // Ensure this customer has a stable quote number
   if (!window.currentQuoteNumber) window.currentQuoteNumber = generateQuoteNumber();
-  const record = { name, jobRef, ...readContactFields(), rooms, quoteNumber: window.currentQuoteNumber, timestamp: Date.now() };
+  const status = isPro() ? getJobStatus() : "open";
+  const record = { name, jobRef, ...readContactFields(), status, rooms, quoteNumber: window.currentQuoteNumber, timestamp: Date.now() };
 
   // OPTIMISED: use cache, no re-fetch
   const cloud = await getCloudData();
@@ -1793,7 +1823,8 @@ function autoUpdateCurrentCustomer() {
   if (!name || !isSignedIn()) return;
 
   const jobRef = document.getElementById("jobRef").value.trim();
-  const record = { name, jobRef, ...readContactFields(), rooms, quoteNumber: window.currentQuoteNumber || null, timestamp: Date.now() };
+  const status = isPro() ? getJobStatus() : "open";
+  const record = { name, jobRef, ...readContactFields(), status, rooms, quoteNumber: window.currentQuoteNumber || null, timestamp: Date.now() };
 
   if (!_cloudCache) _cloudCache = {};
   const customers = Array.isArray(_cloudCache.customers) ? _cloudCache.customers : [];
@@ -1863,11 +1894,17 @@ function renderSavedCustomersList(cloud) {
   filtered.forEach((c) => {
     const li = document.createElement("li");
     li.className = "hub-customer-card";
+    const status = c.status || "open";
+    const statusLabel = status.charAt(0).toUpperCase() + status.slice(1);
+    const statusBadge = isPro()
+      ? `<span class="hcc-status hcc-status--${status}">${statusLabel}</span>`
+      : "";
     li.innerHTML = `
       <div class="hcc-main">
         <div class="hcc-name">${escapeHtml(c.name)}</div>
         ${c.jobRef ? `<div class="hcc-ref">${escapeHtml(c.jobRef)}</div>` : ""}
       </div>
+      ${statusBadge}
       <span class="hcc-arrow">›</span>
       <button class="hcc-delete" aria-label="Delete ${escapeHtml(c.name)}">✕</button>
     `;
@@ -1894,6 +1931,10 @@ function loadCustomer(c) {
     const el = document.getElementById(id);
     if (el) el.value = c[contactKeys[i]] || "";
   });
+
+  // Job status (Pro only)
+  showJobStatusRow(isPro());
+  setJobStatus(c.status || "open");
 
   // Restore the stable quote number for this customer
   window.currentQuoteNumber = c.quoteNumber || null;
@@ -1955,6 +1996,8 @@ function clearJobState() {
     const el = document.getElementById(id);
     if (el) el.value = "";
   });
+  setJobStatus("open");
+  showJobStatusRow(false);
   rooms = [];
   activeRoomId = null;
   updateRoomList();
