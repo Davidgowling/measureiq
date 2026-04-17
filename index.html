@@ -520,6 +520,22 @@
     </div>
   </div>
 
+  <!-- Confirm delete modal -->
+  <div id="confirmModal" class="modal" style="display:none;">
+    <div class="modal-content modal-sm">
+      <div class="modal-header">
+        <h2>Are you sure?</h2>
+      </div>
+      <div class="modal-body">
+        <p id="confirmMsg" style="margin:0; color:var(--dms-text);"></p>
+      </div>
+      <div class="modal-actions" style="margin-top:20px;">
+        <button id="confirmCancelBtn" class="btn secondary">Cancel</button>
+        <button id="confirmOkBtn" class="btn danger">Delete</button>
+      </div>
+    </div>
+  </div>
+
   <script src="script.js?bust=20260417b"></script>
 </body>
 </html>

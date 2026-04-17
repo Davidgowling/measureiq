@@ -905,29 +905,49 @@ function renameRoom() {
   });
 }
 
+function confirmDelete(message, onConfirm) {
+  const modal  = document.getElementById("confirmModal");
+  const msgEl  = document.getElementById("confirmMsg");
+  const okBtn  = document.getElementById("confirmOkBtn");
+  const canBtn = document.getElementById("confirmCancelBtn");
+  if (!modal) { if (window.confirm(message)) onConfirm(); return; }
+
+  msgEl.textContent = message;
+  modal.style.display = "flex";
+
+  function cleanup() {
+    okBtn.removeEventListener("click", doOk);
+    canBtn.removeEventListener("click", doCancel);
+    modal.removeEventListener("click", doBackdrop);
+  }
+  function doOk()      { modal.style.display = "none"; cleanup(); onConfirm(); }
+  function doCancel()  { modal.style.display = "none"; cleanup(); }
+  function doBackdrop(e) { if (e.target === modal) doCancel(); }
+
+  okBtn.addEventListener("click", doOk);
+  canBtn.addEventListener("click", doCancel);
+  modal.addEventListener("click", doBackdrop);
+}
+
 function deleteRoom() {
   if (!activeRoomId) return;
   const room = rooms.find((r) => r.id === activeRoomId);
   if (!room) return;
 
-  const ok = confirm(`Delete room "${room.name}"?`);
-  if (!ok) return;
-
-  rooms = rooms.filter((r) => r.id !== activeRoomId);
-  activeRoomId = rooms.length ? rooms[0].id : null;
-
-  updateRoomList();
-
-  if (activeRoomId) loadRoom(activeRoomId);
-  else {
-    clearRoomForm();
-    showRoomForm(false);
-    document.getElementById("roomTitle").textContent = "No room selected";
-    document.getElementById("result").innerHTML = "";
-  }
-
-  updateStickyFooter();
-  renderQuote();
+  confirmDelete(`Delete room "${room.name}"? This cannot be undone.`, () => {
+    rooms = rooms.filter((r) => r.id !== activeRoomId);
+    activeRoomId = rooms.length ? rooms[0].id : null;
+    updateRoomList();
+    if (activeRoomId) loadRoom(activeRoomId);
+    else {
+      clearRoomForm();
+      showRoomForm(false);
+      document.getElementById("roomTitle").textContent = "No room selected";
+      document.getElementById("result").innerHTML = "";
+    }
+    updateStickyFooter();
+    renderQuote();
+  });
 }
 
 function updateRoomList() {
@@ -1276,12 +1296,14 @@ function addCustomAccessoryRow() {
 function deleteCustomAccessoryRow(btn) {
   const row = btn.closest("tr");
   if (!row) return;
-  row.remove();
-  // Remove orphaned custom header if no custom rows remain
-  const tbody = document.getElementById("accessoriesTbody");
-  if (tbody && !tbody.querySelector("tr[data-custom='true']")) {
-    tbody.querySelector(".custom-header-row")?.remove();
-  }
+  const name = row.querySelector("td")?.textContent?.trim() || "this accessory";
+  confirmDelete(`Remove "${name}" from your accessories list?`, () => {
+    row.remove();
+    const tbody = document.getElementById("accessoriesTbody");
+    if (tbody && !tbody.querySelector("tr[data-custom='true']")) {
+      tbody.querySelector(".custom-header-row")?.remove();
+    }
+  });
 }
 
 //------------------------------------------------------
@@ -1537,10 +1559,13 @@ function removeCustomLine(lineId) {
   if (!activeRoomId) return;
   const room = rooms.find((r) => r.id === activeRoomId);
   if (!room) return;
-
-  room.data.lines = (room.data.lines || []).filter((l) => l.id !== lineId);
-  renderRoomLineItems(room);
-  calculateRoom(true);
+  const line = room.data.lines?.find(l => l.id === lineId);
+  const label = line?.label || "this item";
+  confirmDelete(`Remove "${label}" from this room?`, () => {
+    room.data.lines = (room.data.lines || []).filter((l) => l.id !== lineId);
+    renderRoomLineItems(room);
+    calculateRoom(true);
+  });
 }
 
 //------------------------------------------------------
@@ -2184,29 +2209,27 @@ function loadCustomer(c) {
   switchJobView("job"); // focus on this customer's job
 }
 
-async function deleteCustomer(name) {
+function deleteCustomer(name) {
   if (!isSignedIn()) { requireAuth(); return; }
+  confirmDelete(`Delete "${name}" and all their rooms and quotes?`, async () => {
+    const cloud = await getCloudData();
+    const customers = Array.isArray(cloud.customers) ? cloud.customers : [];
+    markCloudDirty("customers", customers.filter((c) => c.name !== name));
+    await flushSave();
 
-  // OPTIMISED: use cache, no re-fetch
-  const cloud = await getCloudData();
-  const customers = Array.isArray(cloud.customers) ? cloud.customers : [];
+    rooms = [];
+    activeRoomId = null;
+    renderSavedCustomersList(_cloudCache);
 
-  markCloudDirty("customers", customers.filter((c) => c.name !== name));
-  await flushSave();
+    clearRoomForm();
+    showRoomForm(false);
+    document.getElementById("roomTitle").textContent = "No room selected";
+    document.getElementById("result").innerHTML = "";
 
-  rooms = [];
-  activeRoomId = null;
-
-  renderSavedCustomersList(_cloudCache);
-
-  clearRoomForm();
-  showRoomForm(false);
-  document.getElementById("roomTitle").textContent = "No room selected";
-  document.getElementById("result").innerHTML = "";
-
-  updateStickyFooter();
-  renderQuote();
-  switchJobView("hub"); // return to customer list after delete
+    updateStickyFooter();
+    renderQuote();
+    switchJobView("hub");
+  });
 }
 
 /** Reset all current-customer/job state without opening any modal */
