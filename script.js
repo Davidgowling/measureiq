@@ -1421,10 +1421,14 @@ function renderRoomLineItems(room) {
   container.innerHTML = `
     <div class="li-header-row">
       <span>Item</span>
-      <span class="li-header-right">Qty &nbsp;·&nbsp; Auto &nbsp;·&nbsp; × Price</span>
+      <span>Qty</span>
+      <span></span>
+      <span>Auto</span>
+      <span></span>
+      <span>Price</span>
     </div>
     <div class="li-list">${rows}</div>
-    <p class="li-tip">Auto qty mirrors room area. Untick to override.</p>
+    <p class="li-tip">Auto qty mirrors room area — untick to override.</p>
   `;
 
   // Wire events
