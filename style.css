@@ -945,6 +945,64 @@ textarea:focus {
 /* Customer list section */
 .hub-list-section { margin-top: 4px; }
 
+/* Hub filter tabs */
+.hub-filter-tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.hub-filter-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--dms-border);
+  background: var(--dms-card);
+  color: var(--dms-muted);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+
+.hub-filter-tab:hover {
+  border-color: var(--dms-dark);
+  color: var(--dms-dark);
+}
+
+.hub-filter-count {
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: var(--dms-bg);
+  border-radius: 10px;
+  padding: 1px 7px;
+  min-width: 20px;
+  text-align: center;
+}
+
+/* Active "All" tab */
+.hub-filter-tab--active:not([class*="hub-filter-tab--open"]):not([class*="hub-filter-tab--quoted"]):not([class*="hub-filter-tab--accepted"]):not([class*="hub-filter-tab--complete"]) {
+  background: var(--dms-dark);
+  border-color: var(--dms-dark);
+  color: #fff;
+}
+.hub-filter-tab--active:not([class*="hub-filter-tab--open"]):not([class*="hub-filter-tab--quoted"]):not([class*="hub-filter-tab--accepted"]):not([class*="hub-filter-tab--complete"]) .hub-filter-count {
+  background: rgba(255,255,255,0.2);
+  color: #fff;
+}
+
+/* Active status-coloured tabs */
+.hub-filter-tab--open.hub-filter-tab--active     { background: #f0f1f5; border-color: #9295a8; color: #4a4d63; }
+.hub-filter-tab--quoted.hub-filter-tab--active   { background: #e8f6fc; border-color: var(--dms-blue); color: var(--dms-blue); }
+.hub-filter-tab--accepted.hub-filter-tab--active { background: #f0fce8; border-color: #5cb85c; color: #3d7a3d; }
+.hub-filter-tab--complete.hub-filter-tab--active { background: #1c2537; border-color: #1c2537; color: #fff; }
+
+.hub-filter-tab--complete.hub-filter-tab--active .hub-filter-count { background: rgba(255,255,255,0.15); color: #fff; }
+
 .hub-list-title {
   font-size: 0.78rem;
   font-weight: 700;

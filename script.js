@@ -9,6 +9,7 @@ let customAccessories = []; // user-defined accessories
 let businessProfile = null;
 let authUser = null;
 let _pendingLogoData = undefined; // undefined=unchanged, null=remove, string=new data URL
+let _hubFilter = "all"; // active status filter on the customer hub
 
 const AUTH_TOKEN_KEY = "measureiq_auth_token_v1";
 const API_BASE = "";  // same-origin for local dev
@@ -568,6 +569,7 @@ logoutBtn?.addEventListener("click", () => {
   activeRoomId = null;
   businessProfile = null;
   _pendingLogoData = undefined;
+  _hubFilter = "all";
   accessoriesDefs = [];
   customAccessories = [];
 
@@ -1912,7 +1914,9 @@ function autoUpdateCurrentCustomer() {
 }
 
 /** Render the saved customers list from a cloud data object (no fetch needed) */
-function updateDashboard(customers) {
+function updateDashboard(allCustomers, visibleCustomers) {
+  const shown = visibleCustomers ?? allCustomers;
+
   // Greeting
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
@@ -1927,18 +1931,61 @@ function updateDashboard(customers) {
   const dateEl = document.getElementById("dashDate");
   if (dateEl) dateEl.textContent = new Date().toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
 
-  // Stats
-  const countEl = document.getElementById("dashCustomerCount");
-  if (countEl) countEl.textContent = customers.length;
+  // Stat labels
+  const filterLabel = _hubFilter === "all" ? "Customers" : _hubFilter.charAt(0).toUpperCase() + _hubFilter.slice(1);
+  const countLabelEl = document.getElementById("dashCountLabel");
+  if (countLabelEl) countLabelEl.textContent = filterLabel;
+  const valLabelEl = document.getElementById("dashValueLabel");
+  if (valLabelEl) valLabelEl.textContent = _hubFilter === "all" ? "Total quoted" : `${filterLabel} value`;
 
-  const totalValue = customers.reduce((sum, c) => {
+  // Stats from visible set
+  const countEl = document.getElementById("dashCustomerCount");
+  if (countEl) countEl.textContent = shown.length;
+
+  const totalValue = shown.reduce((sum, c) => {
     if (!Array.isArray(c.rooms)) return sum;
     return sum + c.rooms.reduce((rs, r) => rs + (r.data?.lineTotal || 0), 0);
   }, 0);
   const valEl = document.getElementById("dashTotalValue");
   if (valEl) valEl.textContent = "£" + Math.round(totalValue).toLocaleString("en-GB");
 
-  renderGettingStarted(customers);
+  renderGettingStarted(allCustomers);
+}
+
+function renderHubFilterTabs(customers) {
+  const container = document.getElementById("hubFilterTabs");
+  if (!container) return;
+
+  // Free users: just show a plain title, no tabs
+  if (!isPro()) {
+    container.innerHTML = `<h3 class="hub-list-title">Your Customers</h3>`;
+    return;
+  }
+
+  const statuses = ["all", "open", "quoted", "accepted", "complete"];
+  const labels   = { all: "All", open: "Open", quoted: "Quoted", accepted: "Accepted", complete: "Complete" };
+
+  const counts = {};
+  statuses.forEach(s => {
+    counts[s] = s === "all"
+      ? customers.length
+      : customers.filter(c => (c.status || "open") === s).length;
+  });
+
+  container.innerHTML = statuses.map(s => `
+    <button class="hub-filter-tab ${s !== "all" ? "hub-filter-tab--" + s : ""} ${_hubFilter === s ? "hub-filter-tab--active" : ""}"
+            data-filter="${s}">
+      ${labels[s]}
+      <span class="hub-filter-count">${counts[s]}</span>
+    </button>
+  `).join("");
+
+  container.querySelectorAll(".hub-filter-tab").forEach(btn => {
+    btn.addEventListener("click", () => {
+      _hubFilter = btn.dataset.filter;
+      renderSavedCustomersList(_cloudCache);
+    });
+  });
 }
 
 //------------------------------------------------------
@@ -2046,13 +2093,15 @@ function renderSavedCustomersList(cloud) {
   if (!isSignedIn() || !cloud) return;
 
   const customers = Array.isArray(cloud.customers) ? cloud.customers : [];
-  updateDashboard(customers);
+
+  renderHubFilterTabs(customers);
 
   const query = (document.getElementById("customerSearch")?.value || "").trim().toLowerCase();
 
   const filtered = customers
     .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
     .filter((c) => {
+      if (_hubFilter !== "all" && (c.status || "open") !== _hubFilter) return false;
       if (!query) return true;
       return (
         c.name.toLowerCase().includes(query) ||
@@ -2060,8 +2109,15 @@ function renderSavedCustomersList(cloud) {
       );
     });
 
-  if (!filtered.length && customers.length > 0 && query) {
-    list.innerHTML = `<li class="no-results">No customers match "${escapeHtml(query)}"</li>`;
+  updateDashboard(customers, filtered);
+
+  if (!filtered.length) {
+    const msg = query
+      ? `No customers match "${escapeHtml(query)}"`
+      : _hubFilter !== "all"
+        ? `No ${_hubFilter} jobs`
+        : "No customers yet";
+    list.innerHTML = `<li class="no-results">${msg}</li>`;
     return;
   }
 

@@ -160,11 +160,11 @@
           <div class="dash-stats">
             <div class="dash-stat">
               <span id="dashCustomerCount" class="dash-stat__value">0</span>
-              <span class="dash-stat__label">Customers</span>
+              <span class="dash-stat__label" id="dashCountLabel">Customers</span>
             </div>
             <div class="dash-stat">
               <span id="dashTotalValue" class="dash-stat__value">£0</span>
-              <span class="dash-stat__label">Total quoted</span>
+              <span class="dash-stat__label" id="dashValueLabel">Total quoted</span>
             </div>
           </div>
           <button id="newCustomerBtn" class="btn dash-cta">+ New Customer</button>
@@ -186,7 +186,7 @@
 
         <!-- Customer list -->
         <div class="hub-list-section">
-          <h3 class="hub-list-title">Your Customers</h3>
+          <div id="hubFilterTabs" class="hub-filter-tabs"></div>
           <input type="search" id="customerSearch" placeholder="Search by name or job reference…" class="customer-search hub-search" aria-label="Search customers" />
           <ul id="savedCustomersList" class="hub-customer-list"></ul>
         </div>
