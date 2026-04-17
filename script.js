@@ -144,13 +144,11 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("newCustomerBtn").addEventListener("click", newCustomer);
   document.getElementById("backToCustomersBtn")?.addEventListener("click", () => switchJobView("hub"));
 
-  // Job status buttons
-  document.querySelectorAll(".status-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      setJobStatus(btn.dataset.status);
-      autoUpdateCurrentCustomer();
-    });
+  // Job milestone checkboxes
+  ["msOrdered","msDeposit","msPaidInFull"].forEach(id => {
+    document.getElementById(id)?.addEventListener("change", autoUpdateCurrentCustomer);
   });
+  document.getElementById("msDepositAmount")?.addEventListener("input", autoUpdateCurrentCustomer);
 
   // New-customer modal
   document.getElementById("newCustCancelBtn")?.addEventListener("click", () => {
@@ -1812,24 +1810,46 @@ function buildQuoteLineItems(room) {
 // CUSTOMER SAVE / LOAD (CLOUD-ONLY, OPTIMISED)
 //------------------------------------------------------
 // --------------------------------------------------
-// JOB STATUS
+// JOB MILESTONES (Pro only)
 // --------------------------------------------------
-const JOB_STATUSES = ["open", "quoted", "accepted", "complete"];
-
-function getJobStatus() {
-  const active = document.querySelector(".status-btn.active");
-  return active?.dataset.status || "open";
+function migrateStatus(oldStatus) {
+  if (oldStatus === "complete")  return { ordered: true,  deposit: true,  depositAmount: "", paidInFull: true  };
+  if (oldStatus === "accepted")  return { ordered: true,  deposit: true,  depositAmount: "", paidInFull: false };
+  if (oldStatus === "quoted")    return { ordered: true,  deposit: false, depositAmount: "", paidInFull: false };
+  return { ordered: false, deposit: false, depositAmount: "", paidInFull: false };
 }
 
-function setJobStatus(status) {
-  document.querySelectorAll(".status-btn").forEach(btn => {
-    btn.classList.toggle("active", btn.dataset.status === status);
-  });
+function derivedStatus(ms) {
+  if (!ms) return "open";
+  if (ms.paidInFull) return "complete";
+  if (ms.ordered || ms.deposit) return "in-progress";
+  return "open";
 }
 
-function showJobStatusRow(visible) {
-  const row = document.getElementById("jobStatusRow");
-  if (row) row.style.display = visible ? "flex" : "none";
+function readMilestones() {
+  return {
+    ordered:       !!document.getElementById("msOrdered")?.checked,
+    deposit:       !!document.getElementById("msDeposit")?.checked,
+    depositAmount: (document.getElementById("msDepositAmount")?.value || "").trim(),
+    paidInFull:    !!document.getElementById("msPaidInFull")?.checked,
+  };
+}
+
+function setMilestones(ms) {
+  const safe = ms || {};
+  const ordered = document.getElementById("msOrdered");
+  const deposit = document.getElementById("msDeposit");
+  const depositAmt = document.getElementById("msDepositAmount");
+  const paid = document.getElementById("msPaidInFull");
+  if (ordered)     ordered.checked     = !!safe.ordered;
+  if (deposit)     deposit.checked     = !!safe.deposit;
+  if (depositAmt)  depositAmt.value    = safe.depositAmount || "";
+  if (paid)        paid.checked        = !!safe.paidInFull;
+}
+
+function showJobMilestones(visible) {
+  const el = document.getElementById("jobMilestones");
+  if (el) el.style.display = visible ? "flex" : "none";
 }
 
 function readContactFields() {
@@ -1856,8 +1876,8 @@ async function saveCustomer() {
 
   // Ensure this customer has a stable quote number
   if (!window.currentQuoteNumber) window.currentQuoteNumber = generateQuoteNumber();
-  const status = isPro() ? getJobStatus() : "open";
-  const record = { name, jobRef, ...readContactFields(), status, rooms, quoteNumber: window.currentQuoteNumber, timestamp: Date.now() };
+  const milestones = isPro() ? readMilestones() : null;
+  const record = { name, jobRef, ...readContactFields(), milestones, rooms, quoteNumber: window.currentQuoteNumber, timestamp: Date.now() };
 
   // OPTIMISED: use cache, no re-fetch
   const cloud = await getCloudData();
@@ -1899,8 +1919,8 @@ function autoUpdateCurrentCustomer() {
   if (!name || !isSignedIn()) return;
 
   const jobRef = document.getElementById("jobRef").value.trim();
-  const status = isPro() ? getJobStatus() : "open";
-  const record = { name, jobRef, ...readContactFields(), status, rooms, quoteNumber: window.currentQuoteNumber || null, timestamp: Date.now() };
+  const milestones = isPro() ? readMilestones() : null;
+  const record = { name, jobRef, ...readContactFields(), milestones, rooms, quoteNumber: window.currentQuoteNumber || null, timestamp: Date.now() };
 
   if (!_cloudCache) _cloudCache = {};
   const customers = Array.isArray(_cloudCache.customers) ? _cloudCache.customers : [];
@@ -1932,7 +1952,8 @@ function updateDashboard(allCustomers, visibleCustomers) {
   if (dateEl) dateEl.textContent = new Date().toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
 
   // Stat labels
-  const filterLabel = _hubFilter === "all" ? "Customers" : _hubFilter.charAt(0).toUpperCase() + _hubFilter.slice(1);
+  const filterNames = { all: "Customers", open: "Open", "in-progress": "In Progress", complete: "Complete" };
+  const filterLabel = filterNames[_hubFilter] || "Customers";
   const countLabelEl = document.getElementById("dashCountLabel");
   if (countLabelEl) countLabelEl.textContent = filterLabel;
   const valLabelEl = document.getElementById("dashValueLabel");
@@ -1962,14 +1983,14 @@ function renderHubFilterTabs(customers) {
     return;
   }
 
-  const statuses = ["all", "open", "quoted", "accepted", "complete"];
-  const labels   = { all: "All", open: "Open", quoted: "Quoted", accepted: "Accepted", complete: "Complete" };
+  const statuses = ["all", "open", "in-progress", "complete"];
+  const labels   = { all: "All", open: "Open", "in-progress": "In Progress", complete: "Complete" };
 
   const counts = {};
   statuses.forEach(s => {
     counts[s] = s === "all"
       ? customers.length
-      : customers.filter(c => (c.status || "open") === s).length;
+      : customers.filter(c => derivedStatus(c.milestones || migrateStatus(c.status)) === s).length;
   });
 
   container.innerHTML = statuses.map(s => `
@@ -2101,7 +2122,7 @@ function renderSavedCustomersList(cloud) {
   const filtered = customers
     .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
     .filter((c) => {
-      if (_hubFilter !== "all" && (c.status || "open") !== _hubFilter) return false;
+      if (_hubFilter !== "all" && derivedStatus(c.milestones || migrateStatus(c.status)) !== _hubFilter) return false;
       if (!query) return true;
       return (
         c.name.toLowerCase().includes(query) ||
@@ -2124,11 +2145,13 @@ function renderSavedCustomersList(cloud) {
   filtered.forEach((c) => {
     const li = document.createElement("li");
     li.className = "hub-customer-card";
-    const status = c.status || "open";
-    const statusLabel = status.charAt(0).toUpperCase() + status.slice(1);
-    const statusBadge = isPro()
-      ? `<span class="hcc-status hcc-status--${status}">${statusLabel}</span>`
-      : "";
+    const ms = c.milestones || migrateStatus(c.status);
+    const statusBadge = isPro() ? `
+      <div class="milestone-progress" title="Ordered / Deposit / Paid in full">
+        <span class="mp-dot ${ms.ordered    ? 'mp-dot--done' : ''}"></span>
+        <span class="mp-dot ${ms.deposit    ? 'mp-dot--done' : ''}"></span>
+        <span class="mp-dot ${ms.paidInFull ? 'mp-dot--done' : ''}"></span>
+      </div>` : "";
     li.innerHTML = `
       <div class="hcc-main">
         <div class="hcc-name">${escapeHtml(c.name)}</div>
@@ -2162,9 +2185,12 @@ function loadCustomer(c) {
     if (el) el.value = c[contactKeys[i]] || "";
   });
 
-  // Job status (Pro only)
-  showJobStatusRow(isPro());
-  setJobStatus(c.status || "open");
+  // Job milestones (Pro only) — migrate legacy status field
+  showJobMilestones(isPro());
+  if (isPro()) {
+    const ms = c.milestones || migrateStatus(c.status);
+    setMilestones(ms);
+  }
 
   // Restore the stable quote number for this customer
   window.currentQuoteNumber = c.quoteNumber || null;
@@ -2226,8 +2252,8 @@ function clearJobState() {
     const el = document.getElementById(id);
     if (el) el.value = "";
   });
-  setJobStatus("open");
-  showJobStatusRow(false);
+  setMilestones(null);
+  showJobMilestones(false);
   rooms = [];
   activeRoomId = null;
   updateRoomList();

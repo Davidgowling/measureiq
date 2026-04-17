@@ -996,10 +996,9 @@ textarea:focus {
 }
 
 /* Active status-coloured tabs */
-.hub-filter-tab--open.hub-filter-tab--active     { background: #f0f1f5; border-color: #9295a8; color: #4a4d63; }
-.hub-filter-tab--quoted.hub-filter-tab--active   { background: #e8f6fc; border-color: var(--dms-blue); color: var(--dms-blue); }
-.hub-filter-tab--accepted.hub-filter-tab--active { background: #f0fce8; border-color: #5cb85c; color: #3d7a3d; }
-.hub-filter-tab--complete.hub-filter-tab--active { background: #1c2537; border-color: #1c2537; color: #fff; }
+.hub-filter-tab--open.hub-filter-tab--active        { background: #f0f1f5; border-color: #9295a8; color: #4a4d63; }
+.hub-filter-tab--in-progress.hub-filter-tab--active { background: #e8f6fc; border-color: var(--dms-blue); color: var(--dms-blue); }
+.hub-filter-tab--complete.hub-filter-tab--active    { background: #1c2537; border-color: #1c2537; color: #fff; }
 
 .hub-filter-tab--complete.hub-filter-tab--active .hub-filter-count { background: rgba(255,255,255,0.15); color: #fff; }
 
@@ -1208,65 +1207,110 @@ textarea:focus {
 .job-ref-input:focus { border-bottom-color: var(--dms-blue); }
 .job-ref-input::placeholder { color: var(--dms-border); }
 
-/* ---- Job status selector ---- */
-.job-status-row {
+/* ---- Job milestones (Pro only) ---- */
+.job-milestones {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  flex-direction: column;
+  gap: 0;
   margin-top: 10px;
   padding-top: 10px;
   border-top: 1px solid var(--dms-border-lt);
-  flex-wrap: wrap;
 }
 
-.job-status-label {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--dms-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  white-space: nowrap;
-}
-
-.job-status-btns {
+.milestone-row {
   display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--dms-border-lt);
 }
+.milestone-row:last-child { border-bottom: none; }
 
-.status-btn {
-  padding: 5px 14px;
-  border-radius: 20px;
-  border: 1.5px solid var(--dms-border);
-  background: #fff;
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: var(--dms-muted);
+.milestone-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   cursor: pointer;
-  transition: all 0.15s;
+  flex: 1;
+  min-width: 0;
 }
 
-.status-btn:hover { border-color: var(--dms-dark); color: var(--dms-dark); }
+.milestone-cb { display: none; }
 
-.status-btn.active[data-status="open"]     { background: #f0f1f5; border-color: #9295a8; color: #4a4d63; }
-.status-btn.active[data-status="quoted"]   { background: #e8f6fc; border-color: var(--dms-blue); color: var(--dms-blue); }
-.status-btn.active[data-status="accepted"] { background: #f0fce8; border-color: #5cb85c; color: #3d7a3d; }
-.status-btn.active[data-status="complete"] { background: #1c2537; border-color: #1c2537; color: #fff; }
+.milestone-dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid var(--dms-border);
+  background: #fff;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, border-color 0.15s;
+  position: relative;
+}
 
-/* Status pill on hub cards */
-.hcc-status {
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  padding: 2px 9px;
-  border-radius: 20px;
-  white-space: nowrap;
+.milestone-cb:checked + .milestone-dot {
+  background: #22c55e;
+  border-color: #22c55e;
+}
+
+.milestone-cb:checked + .milestone-dot::after {
+  content: "";
+  display: block;
+  width: 6px;
+  height: 10px;
+  border: 2px solid #fff;
+  border-top: none;
+  border-left: none;
+  transform: rotate(45deg) translate(-1px, -1px);
+}
+
+.milestone-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--dms-text);
+  transition: color 0.15s;
+}
+
+.milestone-cb:checked ~ .milestone-label {
+  color: var(--dms-muted);
+  text-decoration: line-through;
+}
+
+.milestone-amount {
+  width: 100px;
+  padding: 4px 8px;
+  border: 1px solid var(--dms-border);
+  border-radius: 6px;
+  font-size: 0.85rem;
+  color: var(--dms-text);
+  background: var(--dms-bg);
   flex-shrink: 0;
 }
-.hcc-status--open     { background: #f0f1f5; color: #6b6e80; }
-.hcc-status--quoted   { background: #e8f6fc; color: var(--dms-blue); }
-.hcc-status--accepted { background: #f0fce8; color: #3d7a3d; }
-.hcc-status--complete { background: #1c2537; color: #fff; }
+
+/* Milestone progress dots on hub cards */
+.milestone-progress {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.mp-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  border: 2px solid var(--dms-border);
+  background: #fff;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.mp-dot--done {
+  background: #22c55e;
+  border-color: #22c55e;
+}
 
 /* ---- Customer contact details ---- */
 .contact-grid {

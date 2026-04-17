@@ -213,14 +213,29 @@
               <input id="custTown" type="text" placeholder="Town / City" />
               <input id="custPostcode" type="text" placeholder="Postcode" />
             </div>
-            <!-- Job status (Pro only) -->
-            <div class="job-status-row" id="jobStatusRow" style="display:none;">
-              <span class="job-status-label">Status</span>
-              <div class="job-status-btns">
-                <button class="status-btn" data-status="open">Open</button>
-                <button class="status-btn" data-status="quoted">Quoted</button>
-                <button class="status-btn" data-status="accepted">Accepted</button>
-                <button class="status-btn" data-status="complete">Complete</button>
+            <!-- Job milestones (Pro only) -->
+            <div class="job-milestones" id="jobMilestones" style="display:none;">
+              <div class="milestone-row">
+                <label class="milestone-item">
+                  <input type="checkbox" id="msOrdered" class="milestone-cb">
+                  <span class="milestone-dot"></span>
+                  <span class="milestone-label">Ordered with supplier</span>
+                </label>
+              </div>
+              <div class="milestone-row">
+                <label class="milestone-item">
+                  <input type="checkbox" id="msDeposit" class="milestone-cb">
+                  <span class="milestone-dot"></span>
+                  <span class="milestone-label">Deposit paid</span>
+                </label>
+                <input type="text" id="msDepositAmount" class="milestone-amount" placeholder="£ amount">
+              </div>
+              <div class="milestone-row">
+                <label class="milestone-item">
+                  <input type="checkbox" id="msPaidInFull" class="milestone-cb">
+                  <span class="milestone-dot"></span>
+                  <span class="milestone-label">Paid in full</span>
+                </label>
               </div>
             </div>
           </div>
