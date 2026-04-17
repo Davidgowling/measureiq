@@ -1384,85 +1384,47 @@ function renderRoomLineItems(room) {
   normaliseRoomLines(room);
 
   const rows = room.data.lines.map((ln) => {
-    const qtyFixed = (Number(ln.qty) || 0).toFixed(2);
-    const priceFixed = (Number(ln.unitPrice) || 0).toFixed(2);
-    const totalFixed = (Number(ln.total) || 0).toFixed(2);
+    const qtyFixed   = (Number(ln.qty)       || 0).toFixed(2);
+    const priceFixed = (Number(ln.unitPrice)  || 0).toFixed(2);
+    const totalFixed = (Number(ln.total)      || 0).toFixed(2);
+    const unit       = unitLabel(ln.unit);
+    const isFlooring = ln.id === "flooring";
 
-    const autoTag =
-      ln.unit === "sqm"
-        ? `<label class="auto-qty">
-             <input type="checkbox" id="lineAuto_${ln.id}" ${ln.autoQty ? "checked" : ""}>
-             Auto
-           </label>`
-        : `<span class="muted tiny">—</span>`;
+    const autoEl = ln.unit === "sqm"
+      ? `<label class="li-auto"><input type="checkbox" id="lineAuto_${ln.id}" ${ln.autoQty ? "checked" : ""}><span>Auto</span></label>`
+      : `<span class="li-auto li-auto--na">—</span>`;
 
-    const includeChecked = ln.selected ? "checked" : "";
-
-    // Flooring is always included (but still shown as included)
-    const includeDisabled = ln.id === "flooring" ? "disabled" : "";
-    const includeHelp = ln.id === "flooring"
-      ? `<span class="muted tiny">Included</span>`
+    const removeEl = ln.source === "custom"
+      ? `<button class="li-remove" data-remove="${ln.id}" type="button" aria-label="Remove">✕</button>`
       : "";
 
-    const unit = unitLabel(ln.unit);
-
-    const removeBtn =
-      ln.source === "custom"
-        ? `<button class="btn danger small" data-remove="${ln.id}" type="button">Remove</button>`
-        : `<span class="muted tiny">—</span>`;
-
     return `
-      <tr data-line="${ln.id}">
-        <td class="cell-include">
-          <label class="checkbox">
-            <input type="checkbox" id="lineOn_${ln.id}" ${includeChecked} ${includeDisabled}>
-            <span>${escapeHtml(ln.label)}</span>
+      <div class="li-card ${ln.selected ? "" : "li-card--off"}" data-line="${ln.id}">
+        <div class="li-top">
+          <label class="li-toggle">
+            <input type="checkbox" id="lineOn_${ln.id}" ${ln.selected ? "checked" : ""} ${isFlooring ? "disabled" : ""}>
+            <span class="li-name">${escapeHtml(ln.label)}</span>
           </label>
-          ${includeHelp}
-        </td>
-
-        <td class="cell-qty">
-          <div class="qty-wrap">
-            <input type="number" id="lineQty_${ln.id}" step="0.01" min="0" value="${qtyFixed}">
-            <span class="unit-pill">${escapeHtml(unit)}</span>
-            ${autoTag}
-          </div>
-        </td>
-
-        <td class="cell-price">
-          <input type="number" id="linePrice_${ln.id}" step="0.01" min="0" value="${priceFixed}">
-        </td>
-
-        <td class="cell-total">
-          <strong id="lineTotal_${ln.id}">£${totalFixed}</strong>
-        </td>
-
-        <td class="cell-actions">
-          ${removeBtn}
-        </td>
-      </tr>
-    `;
+          <strong class="li-total" id="lineTotal_${ln.id}">£${totalFixed}</strong>
+        </div>
+        <div class="li-bottom">
+          <input type="number" id="lineQty_${ln.id}"   class="li-qty"   step="0.01" min="0" value="${qtyFixed}"   inputmode="decimal">
+          <span class="li-unit">${escapeHtml(unit)}</span>
+          ${autoEl}
+          <span class="li-sep">×</span>
+          <input type="number" id="linePrice_${ln.id}" class="li-price" step="0.01" min="0" value="${priceFixed}" inputmode="decimal">
+          ${removeEl}
+        </div>
+      </div>`;
   }).join("");
 
   container.innerHTML = `
-    <table class="line-items-table">
-      <thead>
-        <tr>
-          <th style="width:38%;">Item</th>
-          <th style="width:28%;">Qty</th>
-          <th style="width:18%;">Unit Price</th>
-          <th style="width:12%;">Total</th>
-          <th style="width:4%;"></th>
-        </tr>
-      </thead>
-      <tbody>
-        ${rows}
-      </tbody>
-    </table>
-
-    <div class="muted tiny" style="margin-top:8px;">
-      Tip: For sqm lines, "Auto" uses the room's area as the Qty. Untick it to override the Qty.
+    <div class="li-header-row">
+      <span>Item</span>
+      <span class="li-header-right">Qty &nbsp;·&nbsp; Auto &nbsp;·&nbsp; × Price</span>
     </div>
+    <div class="li-list">${rows}</div>
+    <p class="li-tip">Auto qty mirrors room area. Untick to override.</p>
   `;
 
   // Wire events
