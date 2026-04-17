@@ -1642,6 +1642,57 @@ textarea:focus {
 
 .room-actions .btn { margin-left: 6px; }
 
+/* Compact dimension row */
+.dim-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.dim-label {
+  font-weight: 600;
+  font-size: 0.88rem;
+  white-space: nowrap;
+  color: var(--dms-text);
+}
+
+.dim-inputs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dim-input {
+  width: 80px;
+  padding: 7px 10px;
+  border: 1px solid var(--dms-border);
+  border-radius: 7px;
+  font-size: 0.95rem;
+  text-align: center;
+  background: var(--dms-bg);
+  -moz-appearance: textfield;
+}
+.dim-input:focus {
+  outline: none;
+  border-color: var(--dms-blue);
+  background: #fff;
+}
+.dim-input::-webkit-inner-spin-button,
+.dim-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+.dim-sep {
+  font-size: 1rem;
+  color: var(--dms-muted);
+  font-weight: 500;
+}
+
+.dim-unit {
+  font-size: 0.82rem;
+  color: var(--dms-muted);
+  font-weight: 500;
+}
+
 /* ---------- RESULT ---------- */
 .result { margin-top: 12px; font-size: 0.9rem; }
 
