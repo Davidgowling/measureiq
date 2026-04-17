@@ -124,6 +124,7 @@
           <button class="hamburger-item active" data-page="jobs" data-view="hub">Customers</button>
           <button class="hamburger-item" data-page="accessories">Accessories</button>
           <button class="hamburger-item" data-page="profile">Business Profile</button>
+          <button class="hamburger-item" id="gsMenuBtn" data-page="jobs" data-view="hub">Getting Started</button>
           <button class="hamburger-item admin-only" data-page="admin" style="display:none;">Admin</button>
           <div class="hamburger-divider"></div>
           <div class="hamburger-user">
@@ -167,6 +168,20 @@
             </div>
           </div>
           <button id="newCustomerBtn" class="btn dash-cta">+ New Customer</button>
+        </div>
+
+        <!-- Getting Started panel -->
+        <div id="gettingStarted" class="gs-panel">
+          <div class="gs-header">
+            <div class="gs-header__left">
+              <span class="gs-title">Getting Started</span>
+              <span id="gsProgress" class="gs-progress"></span>
+            </div>
+            <label class="gs-hide-label">
+              <input type="checkbox" id="gsHideCheck"> Hide from dashboard
+            </label>
+          </div>
+          <ul class="gs-list" id="gsList"></ul>
         </div>
 
         <!-- Customer list -->

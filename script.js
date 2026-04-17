@@ -268,6 +268,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   setupTabs();
   setupAuthUI();
+  setupGettingStarted();
   initCloudOnly();
 });
 
@@ -710,6 +711,7 @@ function setupTabs() {
       if (el) el.style.display = key === page ? "block" : "none";
     });
     if (page === "admin") renderAdminPage();
+    if (page === "accessories") localStorage.setItem(GS_ACC_KEY, "1");
     document.querySelectorAll(".hamburger-item[data-page]").forEach((b) => {
       b.classList.toggle("active", b.dataset.page === page);
     });
@@ -1935,6 +1937,106 @@ function updateDashboard(customers) {
   }, 0);
   const valEl = document.getElementById("dashTotalValue");
   if (valEl) valEl.textContent = "£" + Math.round(totalValue).toLocaleString("en-GB");
+
+  renderGettingStarted(customers);
+}
+
+//------------------------------------------------------
+// GETTING STARTED
+//------------------------------------------------------
+const GS_HIDDEN_KEY = "miq_gs_hidden";
+const GS_ACC_KEY    = "miq_acc_reviewed";
+
+const GS_STEPS = [
+  {
+    id: "profile",
+    label: "Complete your business profile",
+    detail: "Add your business name, address and contact details",
+    isDone: () => !!businessProfile?.businessName?.trim(),
+    go: () => window._switchPage?.("profile"),
+  },
+  {
+    id: "logo",
+    label: "Upload your business logo",
+    detail: "Your logo appears on every quote you send to customers",
+    isDone: () => !!businessProfile?.logoData,
+    go: () => window._switchPage?.("profile"),
+  },
+  {
+    id: "accessories",
+    label: "Review accessories & pricing",
+    detail: "Set your prices for grippers, underlay, threshold bars and more",
+    isDone: () => !!localStorage.getItem(GS_ACC_KEY),
+    go: () => window._switchPage?.("accessories"),
+  },
+  {
+    id: "customer",
+    label: "Add your first customer",
+    detail: "Create a customer record and start building a quote",
+    isDone: (customers) => customers && customers.length > 0,
+    go: () => document.getElementById("newCustomerBtn")?.click(),
+  },
+];
+
+function renderGettingStarted(customers) {
+  const panel  = document.getElementById("gettingStarted");
+  const list   = document.getElementById("gsList");
+  const prog   = document.getElementById("gsProgress");
+  const hideEl = document.getElementById("gsHideCheck");
+  if (!panel || !list) return;
+
+  // Sync hide checkbox with localStorage
+  const isHidden = localStorage.getItem(GS_HIDDEN_KEY) === "1";
+  if (hideEl) hideEl.checked = isHidden;
+  panel.classList.toggle("gs-panel--hidden", isHidden);
+
+  const doneCount = GS_STEPS.filter(s => s.isDone(customers)).length;
+  const total     = GS_STEPS.length;
+
+  if (prog) prog.textContent = `${doneCount} of ${total} complete`;
+  panel.classList.toggle("gs-panel--all-done", doneCount === total);
+
+  list.innerHTML = GS_STEPS.map(s => {
+    const done = s.isDone(customers);
+    return `
+      <li class="gs-step ${done ? "gs-step--done" : ""}">
+        <span class="gs-step__icon">${done ? "✓" : ""}</span>
+        <span class="gs-step__body">
+          <span class="gs-step__label">${s.label}</span>
+          <span class="gs-step__detail">${s.detail}</span>
+        </span>
+        ${!done ? `<button class="gs-step__btn" data-gs="${s.id}">Go →</button>` : ""}
+      </li>`;
+  }).join("");
+
+  list.querySelectorAll(".gs-step__btn[data-gs]").forEach(btn => {
+    const step = GS_STEPS.find(s => s.id === btn.dataset.gs);
+    if (step) btn.addEventListener("click", step.go);
+  });
+}
+
+function setupGettingStarted() {
+  const hideEl = document.getElementById("gsHideCheck");
+  if (hideEl) {
+    hideEl.addEventListener("change", () => {
+      localStorage.setItem(GS_HIDDEN_KEY, hideEl.checked ? "1" : "0");
+      renderGettingStarted(
+        Array.isArray(_cloudCache?.customers) ? _cloudCache.customers : []
+      );
+    });
+  }
+
+  // "Getting Started" menu item un-hides the panel then scrolls to it
+  const gsMenuBtn = document.getElementById("gsMenuBtn");
+  if (gsMenuBtn) {
+    gsMenuBtn.addEventListener("click", () => {
+      localStorage.setItem(GS_HIDDEN_KEY, "0");
+      // Navigation is handled by the generic hamburger handler; scroll after paint
+      requestAnimationFrame(() => {
+        document.getElementById("gettingStarted")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    });
+  }
 }
 
 function renderSavedCustomersList(cloud) {
