@@ -14,9 +14,27 @@
       "category": "Preparation"
     },
     {
+      "id": "dampmembrane",
+      "name": "Damp Proof Membrane",
+      "unit": "item",
+      "category": "Preparation"
+    },
+    {
+      "id": "levellingcompound",
+      "name": "Levelling Compound",
+      "unit": "sqm",
+      "category": "Preparation"
+    },
+    {
       "id": "adhesive",
       "name": "Adhesive",
       "unit": "sqm",
+      "category": "Installation"
+    },
+    {
+      "id": "sprayadhesive",
+      "name": "Spray Adhesive",
+      "unit": "item",
       "category": "Installation"
     },
     {
